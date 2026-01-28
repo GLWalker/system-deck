@@ -1,0 +1,189 @@
+/**
+ * SystemDeck WP Colors Bridge
+ * WordPress-compatible UI components matching core admin styles.
+ *
+ * TABLE OF CONTENTS:
+ * 1. Buttons & Controls
+ * 2. Form Elements
+ * 3. Notices & Bubbles
+ * 4. List Tables
+ */
+
+/* =========================================
+   BUTTONS & CONTROLS
+   ========================================= */
+
+/* Standard Button */
+#systemdeck .sd-button,
+#systemdeck .button-secondary {
+	color: var(--sd-highlight-color);
+	border-color: var(--sd-highlight-color);
+	background: transparent;
+	vertical-align: top;
+	text-decoration: none;
+	font-size: 0.8125em;
+	/* 13px */
+	line-height: 2.15384615;
+	min-height: 30px;
+	margin: 0;
+	padding: 0 0.625em;
+	/* 10px */
+	cursor: pointer;
+	border-width: 1px;
+	border-style: solid;
+	appearance: none;
+	border-radius: 0.1875em;
+	/* 3px */
+	white-space: nowrap;
+	box-sizing: border-box;
+}
+
+#systemdeck .sd-button:hover,
+#systemdeck .button-secondary:hover {
+	background: var(--sd-highlight-color);
+	color: var(--sd-button-color);
+	border-color: var(--sd-highlight-color);
+}
+
+#systemdeck .sd-button:focus,
+#systemdeck .button-secondary:focus {
+	background: var(--sd-highlight-color);
+	color: var(--sd-button-color);
+	border-color: var(--sd-highlight-color);
+	box-shadow: 0 0 0 1px var(--wp--preset--color--white),
+		0 0 0 3px var(--sd-highlight-color);
+	/* The WP "Double Ring" */
+	outline: none;
+}
+
+/* Primary Button */
+#systemdeck .sd-button.button-primary {
+	background: var(--sd-highlight-color);
+	border-color: var(--sd-highlight-color);
+	color: var(--sd-button-color);
+}
+
+#systemdeck .sd-button.button-primary:hover,
+#systemdeck .sd-button.button-primary:focus {
+	background: var(--sd-highlight-color);
+	/* Usually slightly lighter in WP, but same var works for consistency */
+	border-color: var(--sd-highlight-color);
+	color: var(--sd-button-color);
+}
+
+#systemdeck .sd-button.button-primary:focus {
+	box-shadow: 0 0 0 1px var(--wp--preset--color--white),
+		0 0 0 3px var(--sd-highlight-color);
+}
+
+#systemdeck .sd-button.button-primary:active {
+	background: var(--sd-highlight-color);
+	border-color: var(--sd-highlight-color);
+	box-shadow: inset 0 2px 5px -3px rgba(0, 0, 0, 0.5);
+	transform: translateY(1px);
+}
+
+/* =========================================
+   FORM ELEMENTS
+   ========================================= */
+
+#systemdeck input[type="text"],
+#systemdeck input[type="password"],
+#systemdeck input[type="checkbox"],
+#systemdeck input[type="radio"],
+#systemdeck select,
+#systemdeck textarea {
+	border: 1px solid var(--sd-border);
+	/* Standard gray border */
+	border-radius: 0.25em;
+	/* 4px */
+	background-color: var(--sd-card-bg);
+	box-shadow: 0 0 0 transparent;
+	color: var(--sd-text);
+	transition: box-shadow 0.1s linear;
+}
+
+/* Focus State - The Critical "WP Feel" */
+#systemdeck input[type="text"]:focus,
+#systemdeck input[type="password"]:focus,
+#systemdeck input[type="checkbox"]:focus,
+#systemdeck input[type="radio"]:focus,
+#systemdeck select:focus,
+#systemdeck textarea:focus {
+	border-color: var(--sd-highlight-color);
+	box-shadow: 0 0 0 1px var(--sd-highlight-color);
+	outline: 0;
+}
+
+/* Checkboxes (Simple Version) */
+#systemdeck input[type="checkbox"]:checked::before {
+	content: url("data:image/svg+xml;utf8,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2020%2020%27%3E%3Cpath%20d%3D%27M14.83%204.89l1.34.94-5.81%208.38H9.02L5.78%209.67l1.34-1.25%202.57%202.4z%27%20fill%3D%27%23333%27%2F%3E%3C%2Fsvg%3E");
+	/* Note: Hard to inject dynamic variable into Data URI. Using generic dark check, rely on border color for theme. */
+}
+
+#systemdeck input[type="checkbox"]:checked {
+	border-color: var(--sd-highlight-color);
+	background-color: var(--sd-card-bg);
+}
+
+#systemdeck input[type="radio"]:checked::before {
+	background-color: var(--sd-highlight-color);
+	/* Radios use a dot, which IS colorable */
+}
+
+/* =========================================
+   NOTICES & BUBBLES
+   ========================================= */
+
+#systemdeck .sd-notice {
+	background: var(--sd-card-bg);
+	border-left: 4px solid var(--sd-highlight-color);
+	box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.1);
+	margin: 0.3125em 0 0.9375em;
+	/* 5px 0 15px */
+	padding: 0.0625em 0.75em;
+	/* 1px 12px */
+}
+
+#systemdeck .sd-notice.notice-error {
+	border-left-color: var(--wp--preset--color--vivid-red);
+	/* Static Error Red */
+}
+
+#systemdeck .sd-notice.notice-warning {
+	border-left-color: var(--sd-notification-color);
+	/* Use theme notification color (often orange) */
+}
+
+#systemdeck .sd-bubble {
+	display: inline-block;
+	vertical-align: top;
+	box-sizing: border-box;
+	margin: 0.0625em 0 0 0.125em;
+	/* 1px 0 0 2px */
+	padding: 0 0.3125em;
+	/* 0 5px */
+	min-width: 18px;
+	height: 18px;
+	border-radius: 0.5625em;
+	/* 9px */
+	background-color: var(--sd-notification-color);
+	color: var(--wp--preset--color--white);
+	font-size: 0.6875em;
+	/* 11px */
+	line-height: 1.6;
+	text-align: center;
+	z-index: 26;
+}
+
+/* =========================================
+   LIST TABLES
+   ========================================= */
+
+#systemdeck .wp-list-table th a {
+	color: var(--sd-text);
+}
+
+#systemdeck .wp-list-table th a:hover {
+	color: var(--sd-link-focus);
+}
