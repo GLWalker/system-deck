@@ -57,7 +57,8 @@ class AjaxHandler
             'save_widget_data',   // Generic Data Store (Write)
             'get_widget_data',    // Generic Data Store (Read)
             'clear_cache',        // System Utility
-            'get_harvest'         // Phase 3: Get Harvested Theme Data
+            // --- NEW PHASE 3 ENDPOINT ---
+            'get_harvest'
         ];
 
         foreach ($actions as $action) {
@@ -85,8 +86,6 @@ class AjaxHandler
      */
     private static function verify_request(): void
     {
-        $action = $_POST['action'] ?? 'unknown';
-
         // 1. NONCE PROTECTION
         if (!check_ajax_referer('sd_load_shell', 'nonce', false)) {
             wp_send_json_error(['message' => 'Security validation failed'], 403);
@@ -158,7 +157,7 @@ class AjaxHandler
 
         // Recursive sanitization wrapper
         $clean_value = self::sanitize_deep($value);
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
 
         // Use StorageEngine with 'global' context for widget data
         $context = new Context($user_id, 'global');
@@ -185,7 +184,7 @@ class AjaxHandler
             wp_send_json_error(['message' => 'Missing widget_id']);
         }
 
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
         $context = new Context($user_id, 'global');
         $data = StorageEngine::get("widget_data_{$widget_id}", $context) ?: [];
 
@@ -274,9 +273,9 @@ class AjaxHandler
 
         if (!$found_key) {
              foreach ($workspaces as $key => $ws) {
-                 if (is_array($ws) && isset($ws['id']) && $ws['id'] === $workspace_id) {
-                     $found_key = $key; break;
-                 }
+                  if (is_array($ws) && isset($ws['id']) && $ws['id'] === $workspace_id) {
+                      $found_key = $key; break;
+                  }
              }
         }
 
@@ -341,7 +340,7 @@ class AjaxHandler
         $name = sanitize_text_field($_POST['name'] ?? '');
         if (!$name) wp_send_json_error('Invalid Name');
 
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
         $workspaces = get_user_meta($user_id, 'sd_workspaces', true);
         if (empty($workspaces) || !is_array($workspaces)) $workspaces = [];
 
@@ -388,7 +387,7 @@ class AjaxHandler
         $workspace_id = sanitize_text_field($_POST['workspace_id'] ?? '');
         if ($workspace_id === 'default') wp_send_json_error('Cannot delete default');
 
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
         $workspaces = get_user_meta($user_id, 'sd_workspaces', true) ?: [];
 
         if (isset($workspaces[$workspace_id])) {
@@ -402,7 +401,7 @@ class AjaxHandler
     public static function handle_get_workspaces(): void
     {
         self::verify_request();
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
         $workspaces_data = get_user_meta($user_id, 'sd_workspaces', true) ?: ['Default' => []];
         $workspaces = [];
 
@@ -434,7 +433,7 @@ class AjaxHandler
     {
         self::verify_request();
         $widgets = isset($_POST['widgets']) ? (array)$_POST['widgets'] : [];
-        update_user_meta(get_current_user_id(), 'sd_active_proxy_widgets', array_map('sanitize_text_field', $widgets));
+        update_user_meta((int)get_current_user_id(), 'sd_active_proxy_widgets', array_map('sanitize_text_field', $widgets));
         wp_send_json_success();
     }
 
@@ -444,7 +443,7 @@ class AjaxHandler
         $pin_data = json_decode(stripslashes($_POST['pin_data'] ?? ''), true);
         if (!$pin_data || !isset($pin_data['id'])) wp_send_json_error(['message' => 'Invalid JSON']);
 
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
         $workspace = sanitize_title($_POST['workspace'] ?? 'Default');
         $context = new Context($user_id, $workspace);
 
@@ -478,8 +477,6 @@ class AjaxHandler
         ]);
     }
 
-
-
     // Notes Handlers
     public static function handle_get_notes(): void { self::verify_request(); (new \SystemDeck\Widgets\Notes())->ajax_get_notes(); }
     public static function handle_get_all_notes(): void { self::verify_request(); (new \SystemDeck\Widgets\Notes())->ajax_get_all_notes(); }
@@ -487,13 +484,11 @@ class AjaxHandler
     public static function handle_delete_note(): void { self::verify_request(); (new \SystemDeck\Widgets\Notes())->ajax_delete_note(); }
     public static function handle_pin_note(): void { self::verify_request(); (new \SystemDeck\Widgets\Notes())->ajax_pin_note(); }
 
-
-
     public static function handle_rename_workspace(): void {
         self::verify_request();
         $id = sanitize_text_field($_POST['workspace_id'] ?? '');
         $name = sanitize_text_field($_POST['name'] ?? '');
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
         $ws = get_user_meta($user_id, 'sd_workspaces', true) ?: [];
         if(isset($ws[$id])) {
             $ws[$id]['name'] = $name;
@@ -506,7 +501,7 @@ class AjaxHandler
     public static function handle_update_workspace_order(): void {
         self::verify_request();
         $order = $_POST['order'] ?? [];
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
         $ws = get_user_meta($user_id, 'sd_workspaces', true) ?: [];
         foreach($order as $idx => $id) {
             if(isset($ws[$id])) $ws[$id]['order'] = $idx;
@@ -526,7 +521,7 @@ class AjaxHandler
             wp_die(__('Insufficient permissions', 'system-deck'));
         }
 
-        $user_id = get_current_user_id();
+        $user_id = (int)get_current_user_id();
         $type = sanitize_text_field($_GET['type'] ?? 'all');
 
         // 1. Fetch Workspaces Meta
@@ -605,7 +600,7 @@ class AjaxHandler
                 wp_send_json_error(['message' => __('Invalid import data format', 'system-deck')]);
             }
 
-            $user_id = get_current_user_id();
+            $user_id = (int)get_current_user_id();
             $existing_workspaces = get_user_meta($user_id, 'sd_workspaces', true) ?: [];
 
             $imported_count = 0;
@@ -664,17 +659,22 @@ class AjaxHandler
     }
 
     /**
-     * AJAX: Get Harvested Theme Data (for Correlator)
+     * AJAX: Get Harvested Theme Data (with Stale Detection)
      */
     public static function handle_get_harvest(): void
     {
         self::verify_request();
 
-        $context = new Context(get_current_user_id(), 'retail', 'global', 'global');
-        $data = StorageEngine::get('telemetry', $context); // This is where Harvester saves
+        $context = new Context((int)get_current_user_id(), 'retail');
+        $data = StorageEngine::get('telemetry', $context);
 
-        // If empty, force harvest
-        if (empty($data)) {
+        // STALE CHECK: If palette is missing RGB data, force update
+        $is_stale = false;
+        if (isset($data['palette']) && !empty($data['palette']) && isset($data['palette'][0]) && !isset($data['palette'][0]['rgb'])) {
+            $is_stale = true;
+        }
+
+        if (empty($data) || $is_stale) {
             $data = Harvester::harvest($context);
         }
 

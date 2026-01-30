@@ -1,6 +1,6 @@
 /**
  * SystemDeck RetailSystem Engine
- * Phase 3: Data Correlator & Style Swapper
+ * Phase 4 Complete: Magic Mouse + Color Intelligence + Style Swapper
  */
 ;(function ($) {
 	"use strict"
@@ -8,7 +8,7 @@
 	const RetailSystem = {
 		active: false,
 		iframe: null,
-		harvest: null, // Stores theme.json data
+		harvest: null,
 
 		init: function () {
 			if ($("#sd-retail-dock").length) $("#sd-retail-dock").fadeIn()
@@ -20,8 +20,6 @@
 				".sd-inspector-close",
 				this.hideInspector.bind(this),
 			)
-
-			// Phase 3: Variation Switcher
 			$(document).on(
 				"change",
 				"#sd-style-swapper",
@@ -35,16 +33,12 @@
 			) {
 				this.open()
 			}
-
-			// Listen for messages from the "Magic Mouse"
 			window.addEventListener("message", this.handleMessage.bind(this))
 		},
 
-		// --- DATA CORRELATOR LOGIC ---
-
+		// --- DATA INTELLIGENCE ---
 		loadHarvest: function () {
-			if (this.harvest) return // Already loaded
-
+			if (this.harvest) return
 			$.post(
 				sd_retail_vars.ajax_url,
 				{
@@ -54,7 +48,7 @@
 				(res) => {
 					if (res.success) {
 						this.harvest = res.data
-						this.renderStyleSwapper() // Populate dropdown
+						this.renderStyleSwapper()
 					}
 				},
 			)
@@ -62,48 +56,57 @@
 
 		correlateColor: function (colorVal) {
 			if (!this.harvest || !this.harvest.palette || !colorVal) return null
+			return this.harvest.palette.find(
+				(c) => c.color === colorVal || c.rgb === colorVal,
+			)
+		},
 
-			// Normalize (simple check, robust would use a Color library)
-			// Checks for direct Hex or RGB match
-			const match = this.harvest.palette.find((c) => c.color === colorVal)
-			if (match) return match
+		// Phase 4: Match Font Size
+		correlateFontSize: function (sizeVal) {
+			if (
+				!this.harvest ||
+				!this.harvest.typography ||
+				!this.harvest.typography.fontSizes
+			)
+				return null
+			return this.harvest.typography.fontSizes.find(
+				(f) => f.size === sizeVal,
+			)
+		},
 
-			// Simple RGB string matcher could go here
+		// Phase 4: Match Spacing
+		correlateSpacing: function (spaceVal) {
+			if (
+				!this.harvest ||
+				!this.harvest.spacing ||
+				!this.harvest.spacing.steps
+			)
+				return null
+			const steps = this.harvest.spacing.steps
+			if (Array.isArray(steps)) {
+				return steps.find((s) => s === spaceVal)
+			}
 			return null
 		},
 
-		// --- STYLE SWAPPER LOGIC ---
-
 		renderStyleSwapper: function () {
 			if (!this.harvest || !this.harvest.variations) return
-
 			const vars = this.harvest.variations
 			if (vars.length === 0) return
 
-			// Inject Dropdown into Toolbar if not exists
 			if ($("#sd-style-swapper").length === 0) {
 				let options = `<option value="">Default Style</option>`
-
-				// Get current active style from URL (if we just reloaded)
 				const current = new URLSearchParams(window.location.search).get(
 					"sd_style",
 				)
-
 				vars.forEach((v) => {
 					const sel = current === v.slug ? "selected" : ""
 					options += `<option value="${v.slug}" ${sel}>${v.title}</option>`
 				})
-
-				const selectorHtml = `
-                    <div class="sd-style-control">
-                        <select id="sd-style-swapper">${options}</select>
-                    </div>
-                `
-
-				// Append before the close button
+				const html = `<div class="sd-style-control"><select id="sd-style-swapper">${options}</select></div>`
 				$(
 					".sd-retail-toolbar .sd-responsive-controls:last-child",
-				).before(selectorHtml)
+				).before(html)
 			}
 		},
 
@@ -111,18 +114,12 @@
 			const slug = $(e.target).val()
 			const iframe = $("#sd-retail-frame")
 			let url = new URL(iframe.attr("src"))
-
-			if (slug) {
-				url.searchParams.set("sd_style", slug)
-			} else {
-				url.searchParams.delete("sd_style")
-			}
-
+			if (slug) url.searchParams.set("sd_style", slug)
+			else url.searchParams.delete("sd_style")
 			iframe.attr("src", url.toString())
 		},
 
-		// --- INSPECTOR UI (UPDATED) ---
-
+		// --- INSPECTOR UI ---
 		handleMessage: function (e) {
 			if (!e.data || e.data.type !== "sd_element_selected") return
 			this.renderInspectorPanel(e.data.data)
@@ -130,25 +127,36 @@
 
 		renderInspectorPanel: function (data) {
 			let panel = $("#sd-inspector-panel")
-
-			// Build Panel Skeleton if missing
 			if (!panel.length) {
 				this.buildPanelSkeleton()
 				panel = $("#sd-inspector-panel")
 			}
 
-			// Populate Basic Data
+			// 1. Header Data
 			$("#sd-insp-title").text(
 				data.tagName.toUpperCase() + (data.id ? "#" + data.id : ""),
 			)
 			$("#sd-insp-block").text(data.block)
-			$("#sd-insp-w").text(Math.round(data.box.width) + "px")
-			$("#sd-insp-h").text(Math.round(data.box.height) + "px")
-			$("#sd-insp-font").text(
-				data.styles.fontFamily.split(",")[0].replace(/['"]/g, ""),
-			)
 
-			// --- CORRELATION MAGIC ---
+			// 2. Box Model Visualization (Enhanced)
+			this.updateBoxModel(data.styles)
+
+			// 3. Typography (Enhanced)
+			const fontName = data.styles.fontFamily
+				.split(",")[0]
+				.replace(/['"]/g, "")
+			const fontSize = data.styles.fontSize
+
+			let fontDisplay = `<span class="sd-meta-value">${fontName}</span>`
+			const fontMatch = this.correlateFontSize(fontSize)
+			if (fontMatch) {
+				fontDisplay += ` <span class="sd-token-pill">${fontMatch.name}</span>`
+			} else {
+				fontDisplay += ` <small>${fontSize}</small>`
+			}
+			$("#sd-insp-font").html(fontDisplay)
+
+			// 4. Colors (Existing)
 			this.updateColorField(
 				"#sd-insp-color",
 				"#sd-insp-color-swatch",
@@ -160,17 +168,47 @@
 				data.styles.backgroundColor,
 			)
 
+			// 5. Shared Dimensions (Inside Box Model)
+			$("#sd-box-w").text(Math.round(data.box.width))
+			$("#sd-box-h").text(Math.round(data.box.height))
+
 			panel.addClass("active")
+		},
+
+		updateBoxModel: function (styles) {
+			// Defensive Helper: Handles undefined safely
+			const fmt = (val) => {
+				if (!val) return "-"
+				if (val === "0px") return "-"
+				return val.replace("px", "")
+			}
+
+			// Map the detailed keys from Engine to the Visualizer
+			// Margin
+			$("#sd-box-mt").text(fmt(styles.spacing.mt))
+			$("#sd-box-mr").text(fmt(styles.spacing.mr))
+			$("#sd-box-mb").text(fmt(styles.spacing.mb))
+			$("#sd-box-ml").text(fmt(styles.spacing.ml))
+
+			// Padding
+			$("#sd-box-pt").text(fmt(styles.spacing.pt))
+			$("#sd-box-pr").text(fmt(styles.spacing.pr))
+			$("#sd-box-pb").text(fmt(styles.spacing.pb))
+			$("#sd-box-pl").text(fmt(styles.spacing.pl))
+
+			// Border
+			$("#sd-box-bt").text(fmt(styles.spacing.bt))
+			$("#sd-box-br").text(fmt(styles.spacing.br))
+			$("#sd-box-bb").text(fmt(styles.spacing.bb))
+			$("#sd-box-bl").text(fmt(styles.spacing.bl))
 		},
 
 		updateColorField: function (textId, swatchId, colorVal) {
 			$(swatchId).css("background-color", colorVal)
-
 			const match = this.correlateColor(colorVal)
 			if (match) {
-				// Found a token!
 				$(textId).html(
-					`<span class="sd-token-pill">${match.name}</span> <small>${colorVal}</small>`,
+					`<span class="sd-token-pill">${match.name}</span> <span class="sd-meta-value">${match.color}</span>`,
 				)
 			} else {
 				$(textId).text(colorVal)
@@ -181,37 +219,52 @@
 			const panelHtml = `
                     <div id="sd-inspector-panel">
                         <div class="sd-insp-header">
-                            <span class="dashicons dashicons-search"></span>
-                            <strong id="sd-insp-title">Inspector</strong>
+                            <span class="dashicons dashicons-search"></span> <strong id="sd-insp-title">Inspector</strong>
                             <button class="sd-btn-icon sd-inspector-close"><span class="dashicons dashicons-no"></span></button>
                         </div>
                         <div class="sd-insp-content">
-                            <div class="sd-insp-row">
-                                <label>Block</label>
-                                <code id="sd-insp-block" class="sd-tag"></code>
+                            <div class="sd-insp-row"><label>Block</label><code id="sd-insp-block" class="sd-tag"></code></div>
+
+                            <div class="sd-box-model-container">
+                                <div class="sd-box-layer sd-box-margin" title="Margin">
+                                    <span class="sd-box-label">margin</span>
+                                    <div class="sd-box-top" id="sd-box-mt">-</div>
+                                    <div class="sd-box-row">
+                                        <div class="sd-box-left" id="sd-box-ml">-</div>
+                                        <div class="sd-box-layer sd-box-border" title="Border">
+                                            <div class="sd-box-top" id="sd-box-bt">-</div>
+                                            <div class="sd-box-row">
+                                                <div class="sd-box-left" id="sd-box-bl">-</div>
+                                                <div class="sd-box-layer sd-box-padding" title="Padding">
+                                                    <span class="sd-box-label">padding</span>
+                                                    <div class="sd-box-top" id="sd-box-pt">-</div>
+                                                    <div class="sd-box-row">
+                                                        <div class="sd-box-left" id="sd-box-pl">-</div>
+                                                        <div class="sd-box-content" title="Content">
+                                                            <span id="sd-box-w"></span> x <span id="sd-box-h"></span>
+                                                        </div>
+                                                        <div class="sd-box-right" id="sd-box-pr">-</div>
+                                                    </div>
+                                                    <div class="sd-box-bottom" id="sd-box-pb">-</div>
+                                                </div>
+                                                <div class="sd-box-right" id="sd-box-br">-</div>
+                                            </div>
+                                            <div class="sd-box-bottom" id="sd-box-bb">-</div>
+                                        </div>
+                                        <div class="sd-box-right" id="sd-box-mr">-</div>
+                                    </div>
+                                    <div class="sd-box-bottom" id="sd-box-mb">-</div>
+                                </div>
                             </div>
-                            <div class="sd-insp-grid-2">
-                                <div><label>Width</label> <span id="sd-insp-w"></span></div>
-                                <div><label>Height</label> <span id="sd-insp-h"></span></div>
-                            </div>
-                            <div class="sd-insp-section">
-                                <label>Typography</label>
-                                <div id="sd-insp-font" class="sd-value-truncate"></div>
-                            </div>
+
+                            <div class="sd-insp-section"><label>Typography</label><div id="sd-insp-font" class="sd-value-truncate"></div></div>
                             <div class="sd-insp-section">
                                 <label>Colors</label>
-                                <div class="sd-color-row">
-                                    <span id="sd-insp-color-swatch" class="sd-swatch"></span>
-                                    <span id="sd-insp-color"></span>
-                                </div>
-                                <div class="sd-color-row">
-                                    <span id="sd-insp-bg-swatch" class="sd-swatch"></span>
-                                    <span id="sd-insp-bg"></span>
-                                </div>
+                                <div class="sd-color-row"><span id="sd-insp-color-swatch" class="sd-swatch"></span><span id="sd-insp-color"></span></div>
+                                <div class="sd-color-row"><span id="sd-insp-bg-swatch" class="sd-swatch"></span><span id="sd-insp-bg"></span></div>
                             </div>
                         </div>
-                    </div>
-                `
+                    </div>`
 			$("#sd-retail-wrapper").append(panelHtml)
 		},
 
@@ -224,7 +277,6 @@
 			this.active = true
 			$("body").addClass("sd-retail-mode-active")
 			$("#sd-retail-dock").fadeOut()
-
 			if ($("#sd-retail-wrapper").length) return
 
 			let url = window.location.href
@@ -235,8 +287,7 @@
                 <div id="sd-retail-wrapper">
                     <div class="sd-retail-toolbar">
                         <div class="sd-responsive-controls detatched" style="border:none;">
-                            <span class="dashicons dashicons-welcome-view-site"></span>
-                            <strong>RetailSystem</strong>
+                            <span class="dashicons dashicons-welcome-view-site"></span> <strong>RetailSystem</strong>
                         </div>
                         <div class="sd-responsive-controls detatched" style="border:none;">
                             <button data-w="375" class="sd-btn-icon" title="Mobile"><span class="dashicons dashicons-smartphone"></span></button>
@@ -248,20 +299,13 @@
                         </div>
                     </div>
                     <div id="sd-retail-stage">
-                        <div id="sd-retail-canvas">
-                            <iframe id="sd-retail-frame" src="${url}"></iframe>
-                            <div class="sd-resizer-handle"></div>
-                        </div>
+                        <div id="sd-retail-canvas"><iframe id="sd-retail-frame" src="${url}"></iframe><div class="sd-resizer-handle"></div></div>
                     </div>
-                </div>
-            `
+                </div>`
 			$("body").append(stageHtml)
 
 			this.bindControls()
-
-			// Phase 3: Load Data
 			this.loadHarvest()
-
 			this.persistState({ open: true })
 		},
 
@@ -278,11 +322,12 @@
 			$("#sd-retail-wrapper .sd-btn-icon[data-w]").on(
 				"click",
 				function () {
-					$("#sd-retail-wrapper .sd-btn-icon").removeClass("active")
-					$(this).addClass("active")
-					var w = $(this).data("w")
+					$(this).addClass("active").siblings().removeClass("active")
 					$("#sd-retail-canvas").css({
-						width: w === "100%" ? "100%" : w + "px",
+						width:
+							$(this).data("w") === "100%"
+								? "100%"
+								: $(this).data("w") + "px",
 					})
 				},
 			)
@@ -300,11 +345,9 @@
 		},
 	}
 
-	if (window.self === window.top) {
+	if (window.self === window.top)
 		$(document).ready(function () {
 			RetailSystem.init()
 		})
-	} else {
-		$("html").addClass("sd-in-frame")
-	}
+	else $("html").addClass("sd-in-frame")
 })(jQuery)

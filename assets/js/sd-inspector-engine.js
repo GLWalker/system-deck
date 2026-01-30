@@ -1,6 +1,6 @@
 /**
- * SystemDeck Inspector Engine (The "Magic Mouse")
- * Injected into the Retail Iframe to handle hover/click inspection.
+ * SystemDeck Inspector Engine
+ * Phase 4 Upgrade: Deep Structure Capture
  */
 ;(function ($) {
 	"use strict"
@@ -10,9 +10,7 @@
 		hovered: null,
 
 		init: function () {
-			// Only run if we are inside the Retail System iframe
 			if (window.self === window.top) return
-
 			console.log("SystemDeck Inspector: Active")
 			this.active = true
 			this.injectStyles()
@@ -32,20 +30,11 @@
                     z-index: 10000;
                 }
                 .sd-ghost-label {
-                    position: absolute;
-                    top: -24px;
-                    left: 0;
-                    background: #2271b1;
-                    color: #fff;
-                    font-family: system-ui, -apple-system, sans-serif;
-                    font-size: 10px;
-                    font-weight: 600;
-                    padding: 2px 6px;
-                    border-radius: 2px 2px 0 0;
-                    white-space: nowrap;
-                    pointer-events: none;
-                    z-index: 10001;
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    position: absolute; top: -24px; left: 0;
+                    background: #2271b1; color: #fff;
+                    font-family: system-ui, sans-serif; font-size: 10px; font-weight: 600;
+                    padding: 2px 6px; border-radius: 2px 2px 0 0;
+                    pointer-events: none; z-index: 10001;
                 }
             `
 			document.head.appendChild(style)
@@ -53,41 +42,30 @@
 
 		bindEvents: function () {
 			const self = this
-
-			// HOVER: Draw Ghost Box
 			document.body.addEventListener(
 				"mouseover",
 				function (e) {
 					if (!self.active) return
 					e.stopPropagation()
-
-					// Cleanup previous
-					if (self.hovered && self.hovered !== e.target) {
+					if (self.hovered && self.hovered !== e.target)
 						self.clearHighlight(self.hovered)
-					}
 
-					// Identify Target (Prioritize Blocks)
 					let target = e.target
 					const block = target.closest("[data-sd-block]")
-
-					// If the target is just a generic div inside a block, highlight the block instead
-					if (block && !target.hasAttribute("data-sd-block")) {
+					if (block && !target.hasAttribute("data-sd-block"))
 						target = block
-					}
 
 					self.highlight(target)
 				},
 				true,
-			) // Capture phase
+			)
 
-			// CLICK: Select & Report
 			document.body.addEventListener(
 				"click",
 				function (e) {
 					if (!self.active) return
 					e.preventDefault()
 					e.stopPropagation()
-
 					const target = self.hovered || e.target
 					self.select(target)
 				},
@@ -98,16 +76,17 @@
 		highlight: function (el) {
 			this.hovered = el
 			el.classList.add("sd-ghost-hover")
-
-			// Add Label
 			let name =
 				el.getAttribute("data-sd-block") || el.tagName.toLowerCase()
 			if (el.id) name += "#" + el.id
 
-			const label = document.createElement("div")
-			label.className = "sd-ghost-label"
-			label.innerText = name
-			el.appendChild(label)
+			// Avoid duplicates
+			if (!el.querySelector(".sd-ghost-label")) {
+				const label = document.createElement("div")
+				label.className = "sd-ghost-label"
+				label.innerText = name
+				el.appendChild(label)
+			}
 		},
 
 		clearHighlight: function (el) {
@@ -118,10 +97,10 @@
 		},
 
 		select: function (el) {
-			// 1. Gather Data
 			const computed = window.getComputedStyle(el)
 			const blockName = el.getAttribute("data-sd-block") || "html"
 
+			// PHASE 4: Capture Deep Box Model
 			const payload = {
 				type: "sd_element_selected",
 				data: {
@@ -134,8 +113,15 @@
 					box: {
 						width: el.offsetWidth,
 						height: el.offsetHeight,
-						top: el.offsetTop,
-						left: el.offsetLeft,
+						// Content Box Dimensions (Approx)
+						contentW:
+							el.clientWidth -
+							parseFloat(computed.paddingLeft) -
+							parseFloat(computed.paddingRight),
+						contentH:
+							el.clientHeight -
+							parseFloat(computed.paddingTop) -
+							parseFloat(computed.paddingBottom),
 					},
 					styles: {
 						color: computed.color,
@@ -143,24 +129,30 @@
 						fontFamily: computed.fontFamily,
 						fontSize: computed.fontSize,
 						fontWeight: computed.fontWeight,
+						// Granular Spacing Data
 						spacing: {
-							padding: computed.padding,
-							margin: computed.margin,
+							mt: computed.marginTop,
+							mr: computed.marginRight,
+							mb: computed.marginBottom,
+							ml: computed.marginLeft,
+							pt: computed.paddingTop,
+							pr: computed.paddingRight,
+							pb: computed.paddingBottom,
+							pl: computed.paddingLeft,
+							bt: computed.borderTopWidth,
+							br: computed.borderRightWidth,
+							bb: computed.borderBottomWidth,
+							bl: computed.borderLeftWidth,
 						},
 					},
 				},
 			}
 
-			// 2. Send to Parent (Retail System)
 			window.parent.postMessage(payload, "*")
-
-			// 3. Visual Feedback
 			this.clearHighlight(el)
-			// Optional: Add a "selected" persistent outline here
 		},
 	}
 
-	// Auto-start
 	if (document.readyState === "loading") {
 		document.addEventListener("DOMContentLoaded", () => Inspector.init())
 	} else {
