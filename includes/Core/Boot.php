@@ -52,7 +52,6 @@ final class Boot
         // Modules
         \SystemDeck\Modules\Renderer::init();
         \SystemDeck\Modules\WorkspaceRenderer::init();
-        \SystemDeck\Modules\PinManager::init();
         \SystemDeck\Modules\SystemScreen::init();
 
         // ADDED: Initialize Tunnel in main flow so the page is registered
