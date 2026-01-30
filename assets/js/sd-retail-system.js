@@ -19,6 +19,9 @@
 			$(document).on("click", "#sd-retail-trigger", this.open.bind(this))
 			$(document).on("click", ".sd-close-retail", this.close.bind(this))
 
+			// 3. Listen for Inspector Messages
+			window.addEventListener("message", this.handleMessage.bind(this))
+
 			// 3. Auto-Launch from State
 			if (
 				window.sd_retail_vars &&
@@ -98,6 +101,20 @@
 					canvas.css({ width: w === "100%" ? "100%" : w + "px" })
 				},
 			)
+		},
+
+		handleMessage: function (event) {
+			if (!event.data || event.data.type !== "sd_element_selected") return
+
+			console.log("RetailSystem: Element Selected", event.data.data)
+
+			// TODO: Activate Data Correlator and update Inspector Panel UI
+			this.updateInspectorPanel(event.data.data)
+		},
+
+		updateInspectorPanel: function (data) {
+			// Basic UI update for now
+			console.log("Update UI with selection:", data.block)
 		},
 
 		persistState: function (state) {
