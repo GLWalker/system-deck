@@ -489,3 +489,13 @@ body.sd-retail-mode-active {
 	flex-direction: column;
 	align-items: stretch;
 }
+
+/* Shadow Inspector */
+.sd-shadow-preview {
+	width: 24px;
+	height: 24px;
+	background: #fff; /* Needs to be light to show shadow */
+	border-radius: 4px;
+	margin-right: 10px;
+	border: 1px solid #ddd;
+}

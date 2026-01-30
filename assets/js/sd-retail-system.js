@@ -1,6 +1,6 @@
 /**
  * SystemDeck RetailSystem Engine
- * Phase 4 Complete: Magic Mouse + Color Intelligence + Style Swapper
+ * Phase 4.5 Complete: Magic Mouse + Color Intelligence + Style Swapper + Box Model + Shadows
  */
 ;(function ($) {
 	"use strict"
@@ -89,6 +89,19 @@
 			return null
 		},
 
+		// Phase 4.5: Match Shadow Token
+		correlateShadow: function (shadowVal) {
+			if (
+				!this.harvest ||
+				!this.harvest.shadows ||
+				!shadowVal ||
+				shadowVal === "none"
+			)
+				return null
+			// Best effort match for normalized strings
+			return this.harvest.shadows.find((s) => s.shadow === shadowVal)
+		},
+
 		renderStyleSwapper: function () {
 			if (!this.harvest || !this.harvest.variations) return
 			const vars = this.harvest.variations
@@ -156,7 +169,32 @@
 			}
 			$("#sd-insp-font").html(fontDisplay)
 
-			// 4. Colors (Existing)
+			// 4. Shadows (Phase 4.5)
+			const shadowVal = data.styles.boxShadow
+			const shadowEl = $("#sd-insp-shadow")
+			const shadowSwatch = $("#sd-insp-shadow-swatch")
+
+			if (shadowVal && shadowVal !== "none") {
+				$(".sd-insp-shadow-section").show()
+				shadowSwatch.css("box-shadow", shadowVal)
+
+				const match = this.correlateShadow(shadowVal)
+				if (match) {
+					shadowEl.html(
+						`<span class="sd-token-pill">${match.name}</span>`,
+					)
+				} else {
+					const clean =
+						shadowVal.length > 30
+							? shadowVal.substring(0, 30) + "..."
+							: shadowVal
+					shadowEl.text(clean)
+				}
+			} else {
+				$(".sd-insp-shadow-section").hide()
+			}
+
+			// 5. Colors (Existing)
 			this.updateColorField(
 				"#sd-insp-color",
 				"#sd-insp-color-swatch",
@@ -168,7 +206,7 @@
 				data.styles.backgroundColor,
 			)
 
-			// 5. Shared Dimensions (Inside Box Model)
+			// 6. Shared Dimensions (Inside Box Model)
 			$("#sd-box-w").text(Math.round(data.box.width))
 			$("#sd-box-h").text(Math.round(data.box.height))
 
@@ -176,27 +214,22 @@
 		},
 
 		updateBoxModel: function (styles) {
-			// Defensive Helper: Handles undefined safely
 			const fmt = (val) => {
 				if (!val) return "-"
 				if (val === "0px") return "-"
 				return val.replace("px", "")
 			}
 
-			// Map the detailed keys from Engine to the Visualizer
-			// Margin
 			$("#sd-box-mt").text(fmt(styles.spacing.mt))
 			$("#sd-box-mr").text(fmt(styles.spacing.mr))
 			$("#sd-box-mb").text(fmt(styles.spacing.mb))
 			$("#sd-box-ml").text(fmt(styles.spacing.ml))
 
-			// Padding
 			$("#sd-box-pt").text(fmt(styles.spacing.pt))
 			$("#sd-box-pr").text(fmt(styles.spacing.pr))
 			$("#sd-box-pb").text(fmt(styles.spacing.pb))
 			$("#sd-box-pl").text(fmt(styles.spacing.pl))
 
-			// Border
 			$("#sd-box-bt").text(fmt(styles.spacing.bt))
 			$("#sd-box-br").text(fmt(styles.spacing.br))
 			$("#sd-box-bb").text(fmt(styles.spacing.bb))
@@ -258,6 +291,15 @@
                             </div>
 
                             <div class="sd-insp-section"><label>Typography</label><div id="sd-insp-font" class="sd-value-truncate"></div></div>
+
+                            <div class="sd-insp-section sd-insp-shadow-section" style="display:none;">
+                                <label>Shadow</label>
+                                <div class="sd-color-row">
+                                    <div id="sd-insp-shadow-swatch" class="sd-shadow-preview"></div>
+                                    <span id="sd-insp-shadow" class="sd-meta-value"></span>
+                                </div>
+                            </div>
+
                             <div class="sd-insp-section">
                                 <label>Colors</label>
                                 <div class="sd-color-row"><span id="sd-insp-color-swatch" class="sd-swatch"></span><span id="sd-insp-color"></span></div>

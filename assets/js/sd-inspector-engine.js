@@ -129,6 +129,7 @@
 						fontFamily: computed.fontFamily,
 						fontSize: computed.fontSize,
 						fontWeight: computed.fontWeight,
+						boxShadow: computed.boxShadow,
 						// Granular Spacing Data
 						spacing: {
 							mt: computed.marginTop,

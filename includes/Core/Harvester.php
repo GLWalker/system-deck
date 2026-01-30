@@ -50,7 +50,10 @@ class Harvester
             'fontFamilies' => $settings['typography']['fontFamilies']['theme'] ?? []
         ];
 
-        // 3. Process Variations
+        // 3. Process Shadows (New)
+        $shadows = $settings['shadow']['presets']['theme'] ?? $settings['shadow']['presets']['default'] ?? [];
+
+        // 4. Process Variations
         $variations = [];
         if (method_exists('WP_Theme_JSON_Resolver', 'get_style_variations')) {
             $raw_variations = \WP_Theme_JSON_Resolver::get_style_variations();
@@ -67,6 +70,7 @@ class Harvester
             'palette'    => $palette,
             'spacing'    => $settings['spacing']['spacingScale'] ?? [],
             'typography' => $typography,
+            'shadows'    => $shadows,
             'layout'     => $settings['layout'] ?? [],
             'variations' => $variations,
             'harvested_at' => time()
