@@ -18,9 +18,11 @@
 			// 2. Bind Triggers
 			$(document).on("click", "#sd-retail-trigger", this.open.bind(this))
 			$(document).on("click", ".sd-close-retail", this.close.bind(this))
-
-			// 3. Listen for Inspector Messages
-			window.addEventListener("message", this.handleMessage.bind(this))
+			$(document).on(
+				"click",
+				".sd-inspector-close",
+				this.hideInspector.bind(this),
+			)
 
 			// 3. Auto-Launch from State
 			if (
@@ -30,6 +32,94 @@
 			) {
 				this.open()
 			}
+
+			// 4. Listen for messages from the "Magic Mouse"
+			window.addEventListener("message", this.handleMessage.bind(this))
+		},
+
+		handleMessage: function (e) {
+			// Security check: Ensure message is from our iframe
+			if (!e.data || e.data.type !== "sd_element_selected") return
+
+			this.renderInspectorPanel(e.data.data)
+		},
+
+		renderInspectorPanel: function (data) {
+			let panel = $("#sd-inspector-panel")
+
+			// Create if missing
+			if (!panel.length) {
+				const panelHtml = `
+                    <div id="sd-inspector-panel">
+                        <div class="sd-insp-header">
+                            <span class="dashicons dashicons-search"></span>
+                            <strong id="sd-insp-title">Inspector</strong>
+                            <button class="sd-btn-icon sd-inspector-close"><span class="dashicons dashicons-no"></span></button>
+                        </div>
+                        <div class="sd-insp-content">
+                            <div class="sd-insp-row">
+                                <label>Block</label>
+                                <code id="sd-insp-block" class="sd-tag"></code>
+                            </div>
+                            <div class="sd-insp-grid-2">
+                                <div><label>Width</label> <span id="sd-insp-w"></span></div>
+                                <div><label>Height</label> <span id="sd-insp-h"></span></div>
+                            </div>
+                            <div class="sd-insp-section">
+                                <label>Typography</label>
+                                <div id="sd-insp-font" class="sd-value-truncate"></div>
+                                <div id="sd-insp-size" class="sd-meta-value"></div>
+                            </div>
+                            <div class="sd-insp-section">
+                                <label>Colors</label>
+                                <div class="sd-color-row">
+                                    <span id="sd-insp-color-swatch" class="sd-swatch"></span>
+                                    <span id="sd-insp-color"></span>
+                                </div>
+                                <div class="sd-color-row">
+                                    <span id="sd-insp-bg-swatch" class="sd-swatch"></span>
+                                    <span id="sd-insp-bg"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+				$("#sd-retail-wrapper").append(panelHtml)
+				panel = $("#sd-inspector-panel")
+			}
+
+			// Populate Data
+			$("#sd-insp-title").text(
+				data.tagName.toUpperCase() + (data.id ? "#" + data.id : ""),
+			)
+			$("#sd-insp-block").text(data.block)
+			$("#sd-insp-w").text(Math.round(data.box.width) + "px")
+			$("#sd-insp-h").text(Math.round(data.box.height) + "px")
+
+			$("#sd-insp-font").text(
+				data.styles.fontFamily.split(",")[0].replace(/['"]/g, ""),
+			)
+			$("#sd-insp-size").text(
+				data.styles.fontSize + " (" + data.styles.fontWeight + ")",
+			)
+
+			$("#sd-insp-color").text(data.styles.color)
+			$("#sd-insp-color-swatch").css(
+				"background-color",
+				data.styles.color,
+			)
+
+			$("#sd-insp-bg").text(data.styles.backgroundColor)
+			$("#sd-insp-bg-swatch").css(
+				"background-color",
+				data.styles.backgroundColor,
+			)
+
+			panel.addClass("active")
+		},
+
+		hideInspector: function () {
+			$("#sd-inspector-panel").removeClass("active")
 		},
 
 		open: function (e) {
@@ -43,6 +133,7 @@
 
 			// 1. Determine URL (Add sd_preview param)
 			let url = window.location.href
+			url = url.split("#")[0] // Remove anchor
 			url += (url.indexOf("?") > -1 ? "&" : "?") + "sd_preview=1"
 
 			// 2. Build Stage
@@ -103,24 +194,10 @@
 			)
 		},
 
-		handleMessage: function (event) {
-			if (!event.data || event.data.type !== "sd_element_selected") return
-
-			console.log("RetailSystem: Element Selected", event.data.data)
-
-			// TODO: Activate Data Correlator and update Inspector Panel UI
-			this.updateInspectorPanel(event.data.data)
-		},
-
-		updateInspectorPanel: function (data) {
-			// Basic UI update for now
-			console.log("Update UI with selection:", data.block)
-		},
-
 		persistState: function (state) {
 			if (!window.sd_retail_vars) return
 			$.post(sd_retail_vars.ajax_url, {
-				action: "sd_save_widget_data", // Generic Data API
+				action: "sd_save_widget_data",
 				nonce: sd_retail_vars.nonce,
 				widget_id: "retail_state",
 				key: "pref_retail_state",
@@ -134,5 +211,7 @@
 		$(document).ready(function () {
 			RetailSystem.init()
 		})
+	} else {
+		$("html").addClass("sd-in-frame")
 	}
 })(jQuery)
