@@ -4,33 +4,57 @@
  * Manages the "Retail Mode" (Frontend) logic and rendering.
  */
 declare(strict_types=1);
+
 namespace SystemDeck\Core;
+
 if (!defined('ABSPATH')) { exit; }
 
 class RetailController {
     public static function init(): void {
         if (is_admin()) return;
 
+        // 1. Detect Preview Mode (The Iframe)
+        if (isset($_GET['sd_preview'])) {
+            add_action('init', [self::class, 'clean_preview_mode']);
+        }
+
+        // 2. Normal Retail Mode
         add_action('wp_footer', [self::class, 'render_shell'], 20);
         add_action('wp_enqueue_scripts', [self::class, 'enqueue_assets']);
         add_action('wp_footer', [self::class, 'trigger_harvest'], 5);
+
+        // 3. Initialize Retail Modules
+        if (class_exists('SystemDeck\Modules\RetailSystem')) {
+            \SystemDeck\Modules\RetailSystem::init();
+        }
     }
 
     /**
-     * Trigger the Harvester if the user can manage options.
+     * strip_preview_mode
+     * Ensures the iframe is clean (No Admin Bar, No Drawer).
      */
+    public static function clean_preview_mode(): void {
+        if (!current_user_can('manage_options')) return;
+
+        // Hide Admin Bar
+        add_filter('show_admin_bar', '__return_false');
+
+        // Prevent Drawer from loading inside itself
+        remove_action('wp_footer', [self::class, 'render_shell'], 20);
+
+        // Add class for CSS targeting
+        add_filter('body_class', function($classes) {
+            $classes[] = 'sd-is-preview';
+            return $classes;
+        });
+    }
+
     public static function trigger_harvest(): void {
         if (!current_user_can('manage_options')) return;
 
-        // Construct a context for the current page
-        $context = new Context(
-            get_current_user_id(),
-            'retail',
-            'post',
-            (string) get_the_ID(),
-            'desktop' // TODO: Detect actual viewport in future
-        );
-
+        // Auto-harvest on frontend load to keep cache fresh
+        $user_id = get_current_user_id();
+        $context = new Context($user_id, 'retail', 'global', 'global');
         if (Harvester::needs_harvest($context)) {
             Harvester::harvest($context);
         }
@@ -38,9 +62,6 @@ class RetailController {
 
     public static function render_shell(): void {
         if (!current_user_can('manage_options')) return;
-
-        // Delegate strictly to the Master Renderer
-        // This ensures if we change the template path later, we only change it in ONE place.
         if (class_exists('SystemDeck\Modules\Renderer')) {
             \SystemDeck\Modules\Renderer::render_shell();
         }
@@ -49,38 +70,23 @@ class RetailController {
     public static function enqueue_assets(): void {
         if (!current_user_can('manage_options')) return;
 
-        // 1. STACK REGISTRATION (Centralized)
-        if (class_exists(Assets::class)) {
-            Assets::register_all();
-        }
+        // Load Core Assets
+        if (class_exists(Assets::class)) Assets::register_all();
 
-        // 2. STYLES
-        if (method_exists(Assets::class, 'get_core_styles')) {
-            foreach (Assets::get_core_styles() as $style) {
-                wp_enqueue_style($style['handle']);
-            }
-        }
-        wp_enqueue_style('wp-components');
-        wp_enqueue_style('react-grid-layout');
+        // Enqueue Retail Engine
+        wp_enqueue_script('sd-retail-system', SD_URL . 'assets/js/sd-retail-system.js', ['jquery'], SD_VERSION, true);
 
-        // 3. SCRIPTS
-        wp_enqueue_script('jquery');
-        // React Grid Layout has its own physics engine, no need for UI Sortable
+        $user_id = get_current_user_id();
+        wp_localize_script('sd-retail-system', 'sd_retail_vars', [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce'    => wp_create_nonce('sd_load_shell'),
+            'site_url' => home_url('/'),
+            // Pre-load preferences from StorageEngine
+            'state'    => StorageEngine::get('pref_retail_state', new Context($user_id, 'retail', 'global', 'global'))
+        ]);
 
-        if (function_exists('wp_enqueue_editor')) {
-            wp_enqueue_editor();
-        }
-
-        // Enqueue from centralized handles
-        wp_enqueue_script('sd-workspace-react');
-        wp_enqueue_script('sd-deck-js');
-        wp_enqueue_script('sd-system-js');
-        wp_enqueue_script('sd-system-grid-js');
-        wp_enqueue_script('sd-toolbox-toggle-js');
-
-        // 4. DYNAMIC COLORS
-        if (method_exists(Assets::class, 'get_dynamic_css')) {
-            wp_add_inline_style('sd-core', Assets::get_dynamic_css());
-        }
+        // Styles
+        wp_enqueue_style('sd-common');
+        // Note: sd-common.css now handles .sd-responsive-controls
     }
 }

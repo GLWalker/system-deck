@@ -77,63 +77,66 @@
 
 /* Scoped WP Buttons */
 #systemdeck .button {
-    display: inline-flex;
-    align-items: center;
-    text-decoration: none;
-    font-size: 13px;
-    line-height: normal;
-    height: 30px;
-    margin: 0;
-    padding: 0 10px;
-    cursor: pointer;
-    border-width: 1px;
-    border-style: solid;
-    -webkit-appearance: none;
-    border-radius: 3px;
-    white-space: nowrap;
-    box-sizing: border-box;
-    color: var(--sd-highlight-color, #2271b1);
-    border-color: var(--sd-highlight-color, #2271b1);
-    background: #f6f7f7;
-    vertical-align: top;
-    font-weight: 400;
+	display: inline-flex;
+	align-items: center;
+	text-decoration: none;
+	font-size: 13px;
+	line-height: normal;
+	height: 30px;
+	margin: 0;
+	padding: 0 10px;
+	cursor: pointer;
+	border-width: 1px;
+	border-style: solid;
+	-webkit-appearance: none;
+	border-radius: 3px;
+	white-space: nowrap;
+	box-sizing: border-box;
+	color: var(--sd-highlight-color, #2271b1);
+	border-color: var(--sd-highlight-color, #2271b1);
+	background: #f6f7f7;
+	vertical-align: top;
+	font-weight: 400;
 }
 
 #systemdeck .button.button-primary {
-    background: var(--sd-highlight-color, #2271b1);
-    border-color: var(--sd-highlight-color, #2271b1);
-    color: #fff;
-    text-shadow: none;
+	background: var(--sd-highlight-color, #2271b1);
+	border-color: var(--sd-highlight-color, #2271b1);
+	color: #fff;
+	text-shadow: none;
 }
 
 #systemdeck .button.button-secondary {
-    color: var(--sd-highlight-color, #2271b1);
-    border-color: var(--sd-highlight-color, #2271b1);
-    background: #f6f7f7;
+	color: var(--sd-highlight-color, #2271b1);
+	border-color: var(--sd-highlight-color, #2271b1);
+	background: #f6f7f7;
 }
 
 #systemdeck .button:hover,
 #systemdeck .button.button-secondary:hover {
-    background: #f0f0f1;
-    border-color: #0a4b78;
-    color: #0a4b78;
+	background: #f0f0f1;
+	border-color: #0a4b78;
+	color: #0a4b78;
 }
 
 #systemdeck .button.button-primary:hover {
-    background: var(--sd-link-focus, #135e96); /* Using link-focus as hover approx */
-    border-color: var(--sd-link-focus, #135e96);
-    color: #fff;
+	background: var(
+		--sd-link-focus,
+		#135e96
+	); /* Using link-focus as hover approx */
+	border-color: var(--sd-link-focus, #135e96);
+	color: #fff;
 }
 
 #systemdeck .button:disabled,
 #systemdeck .button-primary:disabled {
-    color: #a7aaad !important;
-    border-color: #dcdcde !important;
-    background: #f6f7f7 !important;
-    box-shadow: none !important;
-    text-shadow: none !important;
-    cursor: default;
-    transform: none !important;
+	color: #a7aaad !important;
+	border-color: #dcdcde !important;
+	background: #f6f7f7 !important;
+	box-shadow: none !important;
+	text-shadow: none !important;
+	cursor: default;
+	transform: none !important;
 }
 
 /* Scoped WP Inputs */
@@ -144,22 +147,86 @@
 #systemdeck input[type="number"],
 #systemdeck select,
 #systemdeck textarea {
-    box-shadow: 0 0 0 transparent;
-    border-radius: 4px;
-    border: 1px solid #8c8f94;
-    background-color: #fff;
-    color: #2c3338;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-    padding: 0 8px;
-    font-size: 14px;
-    line-height: 2;
-    min-height: 30px;
+	box-shadow: 0 0 0 transparent;
+	border-radius: 4px;
+	border: 1px solid #8c8f94;
+	background-color: #fff;
+	color: #2c3338;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans,
+		Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	padding: 0 8px;
+	font-size: 14px;
+	line-height: 2;
+	min-height: 30px;
 }
 
 #systemdeck input:focus,
 #systemdeck select:focus,
 #systemdeck textarea:focus {
-    border-color: var(--sd-highlight-color, #2271b1);
-    box-shadow: 0 0 0 1px var(--sd-highlight-color, #2271b1);
-    outline: 2px solid transparent;
+	border-color: var(--sd-highlight-color, #2271b1);
+	box-shadow: 0 0 0 1px var(--sd-highlight-color, #2271b1);
+	outline: 2px solid transparent;
+}
+
+/* =========================================
+   RETAIL SYSTEM (Overlay)
+   ========================================= */
+body.sd-retail-mode-active {
+	overflow: hidden;
+}
+
+#sd-retail-wrapper {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100vw;
+	height: 100vh;
+	background: var(--sd-body-background, #1a1a1a);
+	z-index: 999999;
+	display: flex;
+	flex-direction: column;
+}
+
+.sd-retail-toolbar {
+	height: 50px;
+	background: #101517;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 20px;
+	color: #fff;
+	flex-shrink: 0;
+}
+
+#sd-retail-stage {
+	flex-grow: 1;
+	background: #2c3338;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	overflow: auto;
+	padding: 40px;
+	background-image: radial-gradient(#3c434a 1px, transparent 1px);
+	background-size: 20px 20px;
+}
+
+#sd-retail-canvas {
+	width: 100%;
+	height: 100%;
+	background: #fff;
+	box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
+	transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	border-radius: 4px;
+	overflow: hidden;
+	position: relative;
+	max-width: 100%;
+}
+
+#sd-retail-frame {
+	width: 100%;
+	height: 100%;
+	border: none;
+	display: block;
 }
