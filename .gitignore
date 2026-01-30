@@ -1,0 +1,22 @@
+# WordPress
+node_modules/
+vendor/
+.DS_Store
+.vscode/
+.idea/
+*.log
+*.zip
+.env
+.grunt/
+.gulp/
+
+# Build Assets
+/assets/css/*.map
+/assets/js/*.map
+
+# User Data
+/brain/
+implementation_plan.md
+walkthrough.md
+task.md
+context_resolver_spec.md

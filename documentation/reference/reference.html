@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Admin Drawer Layout</title>
+        <link rel='stylesheet' id='dashicons-css' href='https://s1.wp.com/wp-includes/css/dashicons.min.css'
+            type='text/css' media='all' />
+
+        <style>
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+            }
+
+            /* ++ Variables ++ */
+            #systemdeck {
+                --sd-bar-bg: #1d2327;
+                --sd-bar-text: #ffffff;
+
+                --sd-canvas-bg: #f0f0f1;
+
+                --sd-text: #3c434a;
+                --sd-border: #c3c4c7;
+                --sd-accent: #72aee6;
+                --sd-highlight: #2271b1;
+
+                --sd-header-h: 32px;
+                --sd-sidebar-w: 480px;
+                --sd-z-drawer: 99998;
+                --sd-menu-wide: 160px;
+                --sd-menu-folded: 36px;
+
+                --sd-transition: 0.15s ease-in-out;
+
+                --sd-breakpoint-sm: 360px;
+                --sd-breakpoint-md: 782px;
+                --sd-breakpoint-lg: 783px;
+
+                --wp--preset--color--black: #000000;
+                --wp--preset--color--cyan-bluish-gray: #abb8c3;
+                --wp--preset--color--white: #ffffff;
+                --wp--preset--color--pale-pink: #f78da7;
+                --wp--preset--color--vivid-red: #cf2e2e;
+                --wp--preset--color--luminous-vivid-orange: #ff6900;
+                --wp--preset--color--luminous-vivid-amber: #fcb900;
+                --wp--preset--color--light-green-cyan: #7bdcb5;
+                --wp--preset--color--vivid-green-cyan: #00d084;
+                --wp--preset--color--pale-cyan-blue: #8ed1fc;
+                --wp--preset--color--vivid-cyan-blue: #0693e3;
+                --wp--preset--color--vivid-purple: #9b51e0;
+            }
+
+            /* ++ EOL Variables ++ */
+            /* ++ Setup ++ */
+            #systemdeck *,
+            #systemdeck *::before,
+            #systemdeck *::after {
+                box-sizing: inherit;
+            }
+
+            #systemdeck a {
+                color: var(--sd-accent);
+                text-decoration: none;
+                transition: color 0.1s ease-in-out;
+            }
+
+            #systemdeck a:hover {
+                color: var(--sd-highlight);
+                text-decoration: underline;
+            }
+
+            /* ++ EOL Setup ++ */
+            /* ++ System Framework ++ */
+
+            #systemdeck {
+                display: flex;
+                flex-direction: column;
+
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif !important;
+                box-sizing: border-box;
+
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100vw;
+                max-width: 100vw;
+                height: auto;
+
+                background: var(--sd-canvas-bg);
+                color: var(--sd-text);
+                z-index: var(--sd-z-drawer);
+                font-size: 1rem;
+                line-height: 1.5;
+                border: none;
+
+                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+                pointer-events: auto !important;
+            }
+
+            #systemdeck #sd-header-bar {
+                flex: 0 0 var(--sd-header-h);
+                width: 100%;
+                background-color: var(--sd-bar-bg);
+                color: var(--sd-bar-text);
+                z-index: 100;
+            }
+
+            #systemdeck #sd-wrap {
+                display: flex;
+                flex: 1;
+                width: 100%;
+                overflow: hidden;
+            }
+
+            #systemdeck #sd-menumain {
+                flex: 0 0 var(--sd-menu-wide);
+                width: var(--sd-menu-wide);
+                background-color: var(--sd-bar-bg);
+                color: var(--sd-bar-text);
+
+                transition: flex-basis var(--sd-transition), width var(--sd-transition);
+                display: flex;
+                flex-direction: column;
+            }
+
+            #systemdeck #sd-menumain.folded {
+                flex: 0 0 var(--sd-menu-folded);
+                width: var(--sd-menu-folded);
+            }
+
+            #systemdeck #sd-workspace-content {
+                flex: 1;
+                overflow-y: auto;
+                width: 100%;
+            }
+
+            /* ++ EOL System Framework ++ */
+            /* ++ Docking System ++ */
+
+            #systemdeck.standard-dock {
+                height: 60vh;
+                width: 100vw;
+                left: 0;
+                bottom: 0;
+            }
+
+            #systemdeck.sd-closed.standard-dock {
+                transform: translateY(100%);
+            }
+
+            #systemdeck.right-dock {
+                top: auto;
+                bottom: 0;
+                left: calc(100vw - var(--sd-sidebar-w));
+                width: var(--sd-sidebar-w);
+                height: calc(100vh - 32px);
+                box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+            #systemdeck.sd-closed.right-dock {
+                transform: translateX(100%);
+            }
+
+            #systemdeck.left-dock {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: auto;
+                width: var(--sd-sidebar-w);
+                height: calc(100vh - 32px);
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            }
+
+            #systemdeck.sd-closed.left-dock {
+                transform: translateX(-100%);
+            }
+
+            #systemdeck.base-dock {
+                height: var(--sd-header-h);
+                overflow: visible;
+                width: 100vw;
+                bottom: 0;
+                left: 0;
+            }
+
+            #systemdeck.sd-closed.base-dock {
+                transform: translateY(100%);
+            }
+
+            #systemdeck.right-base-dock {
+                top: auto;
+                bottom: 0;
+                right: 0;
+                left: calc(100vw - var(--sd-sidebar-w));
+                width: var(--sd-sidebar-w);
+                height: var(--sd-header-h);
+            }
+
+            #systemdeck.sd-closed.right-base-dock {
+                transform: translateX(100%);
+            }
+
+            #systemdeck.left-base-dock {
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: auto;
+                width: var(--sd-sidebar-w);
+                height: var(--sd-header-h);
+            }
+
+            #systemdeck.sd-closed.left-base-dock {
+                transform: translateX(-100%);
+            }
+
+            #systemdeck.min-dock {
+                top: auto;
+                bottom: 0;
+                left: 0 !important;
+                width: var(--sd-header-h) !important;
+                height: var(--sd-header-h) !important;
+                z-index: 100000;
+                overflow: hidden;
+                box-shadow: 2px -2px 6px rgba(0, 0, 0, 0.08);
+            }
+
+            #systemdeck.sd-closed.min-dock {
+                transform: translateY(100%);
+            }
+
+            #systemdeck.base-dock #sd-wrap,
+            #systemdeck.right-base-dock #sd-wrap,
+            #systemdeck.left-base-dock #sd-wrap,
+            #systemdeck.min-dock #sd-wrap {
+                visibility: hidden;
+                height: 0;
+                overflow: hidden;
+                pointer-events: none;
+            }
+
+            #systemdeck.full-dock {
+                height: calc(100vh - 32px);
+                width: 100vw;
+                top: auto;
+                bottom: 0;
+                left: 0;
+            }
+
+            body.block-editor-page #systemdeck.full-dock,
+            body.block-editor-page #systemdeck.right-dock,
+            body.block-editor-page #systemdeck.left-dock,
+            body.site-editor-php #systemdeck.full-dock,
+            body.site-editor-php #systemdeck.right-dock,
+            body.site-editor-php #systemdeck.right-dock {
+                height: calc(100vh - 60px);
+            }
+
+            #systemdeck.sd-closed.full-dock {
+                transform: translateY(100%);
+            }
+
+            /* ++ EOL Docking System ++ */
+            /* ++ Deck Menu ++ */
+            #systemdeck #sd-menuwrap {
+                width: 100%;
+                height: 100%;
+            }
+
+            #systemdeck #sd-menu {
+                margin: 0;
+                padding: 0;
+                list-style: none;
+            }
+
+            #systemdeck #sd-menu li a {
+                display: flex;
+                align-items: center;
+                text-decoration: none;
+                color: var(--sd-bar-text);
+                height: 34px;
+                padding: 0;
+                overflow: hidden;
+            }
+
+            #systemdeck #sd-menu li a:hover {
+                color: var(--sd-accent);
+            }
+
+            #systemdeck .wp-menu-image {
+                flex: 0 0 var(--sd-menu-folded);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            #systemdeck .wp-menu-name {
+                padding-left: 4px;
+                white-space: nowrap;
+                font-size: 14px;
+                opacity: 1;
+                transition: opacity var(--sd-transition);
+            }
+
+            #systemdeck #sd-menumain.folded .wp-menu-name,
+            #systemdeck #sd-menumain.folded .collapse-button-label {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            #systemdeck #sd-collapse-menu {
+                margin-top: auto;
+            }
+
+            #systemdeck #sd-collapse-button {
+                width: 100%;
+                height: 34px;
+                background: transparent;
+                border: none;
+                color: var(--sd-bar-text);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                padding: 0;
+            }
+
+            #systemdeck #sd-collapse-button:hover {
+                color: var(--sd-accent);
+            }
+
+            #systemdeck .collapse-button-icon::before {
+                content: "\f341";
+                font-family: dashicons;
+                display: inline-block;
+                width: var(--sd-menu-folded);
+                text-align: center;
+                font-size: 20px;
+            }
+
+            #systemdeck #sd-menumain.folded .collapse-button-icon::before {
+                content: "\f345";
+            }
+
+            #systemdeck .collapse-button-label {
+                font-size: 13px;
+                transition: opacity var(--sd-transition);
+            }
+
+            /* ++ EOL Deck Menu ++ */
+            /* ++ Workspace Inner ++ */
+            #systemdeck #sd-workspacewrap {
+                padding: 20px;
+                width: 100%;
+            }
+
+            /* ++ EOL Workspace Inner ++ */
+            /* =========================================================
+   RIGHT DOCK (LTR) – Directional Overrides
+   Flyouts open LEFT, triangle flips, accents mirror
+========================================================= */
+
+            /* ---------------------------------------
+   Top-level triangle pointer
+---------------------------------------- */
+
+            #systemdeck.right-dock #sd-menu>li::after {
+                right: auto;
+                left: 0;
+
+                border-right-color: transparent;
+                border-left-color: var(--sd-canvas-bg);
+            }
+
+            #systemdeck.right-dock #sd-menu>li.wp-has-submenu:hover:not(.current):not(.wp-has-current-submenu)::after {
+                border-left-color: var(--sd-ac-highlight);
+            }
+
+            /* ---------------------------------------
+   Default flyout submenu (unfolded)
+---------------------------------------- */
+
+            #systempress.right-dock #systemdeck #sd-menu .wp-submenu {
+                left: auto;
+                right: var(--sd-menu-wide);
+            }
+
+            /* ---------------------------------------
+   Folded flyout positioning
+---------------------------------------- */
+
+            #systemdeck.right-dock #sd-menumain.folded #sd-menu li.menu-top:hover .wp-submenu,
+            #systemdeck.right-dock #sd-menumain.folded #sd-menu li.menu-top:focus-within .wp-submenu,
+            #systemdeck.right-dock #sd-menumain.folded #sd-menu li.wp-has-current-submenu>.wp-submenu {
+                left: auto;
+                right: var(--sd-menu-folded);
+            }
+
+            /* ---------------------------------------
+   Folded flyout header (mirror padding / borders)
+---------------------------------------- */
+
+            #systemdeck.right-dock #sd-menu .wp-submenu .wp-submenu-head {
+                padding: 5px 11px 5px 4px;
+                margin: -8px -5px 4px -1px;
+
+                border-width: 3px 5px 3px 1px;
+            }
+
+            /* ---------------------------------------
+   Submenu link accent (mirror inset bar)
+---------------------------------------- */
+
+            #systempress.right-dock #systemdeck #sd-menu .wp-submenu a {
+                box-shadow: inset -4px 0 0 0 transparent;
+            }
+
+            #systemdeck.right-dock #sd-menu .wp-submenu a:hover,
+            #systemdeck.right-dock #sd-menu .wp-submenu a:focus {
+                box-shadow: inset -4px 0 0 0 var(--sd-highlight);
+            }
+
+            /* ---------------------------------------
+   Folded submenu header hover accent
+---------------------------------------- */
+
+            #systemdeck.right-dock #sd-menumain.folded #sd-menu .wp-submenu-head:hover {
+                box-shadow: inset -4px 0 0 0 currentColor;
+            }
+        </style>
+    </head>
+
+    <body>
+
+        <div id="systemdeck" role="dialog" aria-hidden="false" class="wp-core-ui admin-color-fresh"
+            data-initial-theme="light" data-theme="light">
+
+            <header id="sd-header-bar" class="nojq">
+            </header>
+
+            <div id="sd-wrap">
+
+                <aside id="sd-menumain" role="navigation">
+                    <div id="sd-menuwrap">
+                        <ul id="sd-menu">
+
+                            <li class="menu-top menu-top-first menu-icon-about" id="menu-config">
+                                <a href="#sd-widget-config" class="wp-first-item">
+                                    <div class="wp-menu-image dashicons-before dashicons-networking"></div>
+                                    <div class="wp-menu-name">System</div>
+                                </a>
+                            </li>
+
+                            <li id="sd-collapse-menu">
+                                <button type="button" id="sd-collapse-button" aria-expanded="true">
+                                    <span class="collapse-button-icon"></span>
+                                    <span class="collapse-button-label">Collapse Menu</span>
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </aside>
+
+                <section id="sd-workspace-content">
+
+                    <div id="sd-workspacewrap">
+                        <h1>Workspace Content</h1>
+                        <p>This area will automatically resize when the sidebar is toggled.</p>
+                        <p>I can also style a <a href="https://dannytrejo.com/" target="_blank">Bad Ass</a> link</p>
+                    </div>
+
+                </section>
+            </div>
+
+        </div>
+
+        <script type="text/javascript">
+            ( function () {
+                var varMenuContent = document.getElementById( 'sd-menumain' );
+                var varCollapseBtn = document.getElementById( 'sd-collapse-button' );
+
+                if ( varCollapseBtn && varMenuContent ) {
+                    varCollapseBtn.addEventListener( 'click', function () {
+                        var isFolded = varMenuContent.classList.toggle( 'folded' );
+
+                        // Update ARIA for accessibility
+                        this.setAttribute( 'aria-expanded', !isFolded );
+
+                        // Optional: Store preference in localStorage
+                        localStorage.setItem( 'sd_menu_folded', isFolded );
+                    } );
+                }
+
+                // Check for saved state on load
+                if ( localStorage.getItem( 'sd_menu_folded' ) === 'true' ) {
+                    varMenuContent.classList.add( 'folded' );
+                    varCollapseBtn.setAttribute( 'aria-expanded', 'false' );
+                }
+            } )();
+        </script>
+
+        <hr>
+
+        <!--/********* GRID ****************
+*****
+****************************************** -->
+        <section id="workspace">
+
+            <style>
+                /* =========================================
+           WordPress Admin Postbox + Custom Widget Styles
+        ========================================= */
+
+                /* ------------------------------
+           Postbox Container
+        ------------------------------ */
+                .postbox {
+                    margin: 0 0 20px 0;
+                    padding: 0;
+                    border: 1px solid #c3c4c7;
+                    background: #fff;
+                    border-radius: 3px;
+                    box-shadow: 0 1px 1px rgba(0, 0, 0, .04);
+                }
+
+                .postbox.closed .inside {
+                    display: none;
+                }
+
+                .postbox-header {
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 8px 12px;
+                    border-bottom: 1px solid #c3c4c7;
+                    background: #f1f1f1;
+                    cursor: move;
+                }
+
+                .hndle {
+                    font-size: 14px;
+                    font-weight: 600;
+                    margin: 0;
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                }
+
+                .screen-reader-text {
+                    position: absolute;
+                    clip: rect(1px, 1px, 1px, 1px);
+                    padding: 0;
+                    border: 0;
+                    height: 1px;
+                    width: 1px;
+                    overflow: hidden;
+                }
+
+                .handle-actions {
+                    display: flex;
+                    gap: 4px;
+                }
+
+                .handle-order-higher,
+                .handle-order-lower,
+                .handlediv {
+                    background: none;
+                    border: none;
+                    cursor: pointer;
+                    color: #787c82;
+                    width: 24px;
+                    height: 24px;
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+
+                .handle-order-higher:hover,
+                .handle-order-lower:hover,
+                .handlediv:hover {
+                    color: #2271b1;
+                }
+
+                .order-higher-indicator::before {
+                    content: "\f343";
+                    font: normal 20px/1 dashicons;
+                }
+
+                .order-lower-indicator::before {
+                    content: "\f347";
+                    font: normal 20px/1 dashicons;
+                }
+
+                .toggle-indicator::before {
+                    content: "\f142";
+                    font: normal 20px/1 dashicons;
+                }
+
+                .postbox.closed .toggle-indicator::before {
+                    content: "\f140";
+                }
+
+                .inside {
+                    padding: 12px;
+                    margin: 0;
+                    line-height: 1.4;
+                    font-size: 13px;
+                }
+
+                /* ------------------------------
+           Custom Widget Form Styles
+        ------------------------------ */
+                .initial-form {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    margin: 0;
+                }
+
+                .input-text-wrap,
+                .textarea-wrap {
+                    display: flex;
+                    flex-direction: column;
+                    margin-bottom: 12px;
+                }
+
+                .input-text-wrap label,
+                .textarea-wrap label {
+                    font-weight: 600;
+                    margin-bottom: 4px;
+                }
+
+                .input-text-wrap input[type="text"],
+                .textarea-wrap textarea {
+                    padding: 6px 8px;
+                    border: 1px solid #ccc;
+                    border-radius: 3px;
+                    font-size: 13px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    background: #fff;
+                    color: #555;
+                }
+
+                .textarea-wrap textarea {
+                    resize: vertical;
+                }
+
+                .submit {
+                    margin-top: 8px;
+                }
+
+                .submit input[type="submit"] {
+                    margin-top: 0;
+                    padding: 6px 12px;
+                    font-size: 13px;
+                }
+
+                .button {
+                    display: inline-block;
+                    margin: 0;
+                    text-align: center;
+                    vertical-align: top;
+                    cursor: pointer;
+                    background: #f1f1f1;
+                    border: 1px solid #ccc;
+                    border-radius: 3px;
+                    padding: 3px 8px;
+                    font-size: 13px;
+                    line-height: 1.4;
+                    text-decoration: none;
+                    white-space: nowrap;
+                    box-sizing: border-box;
+                }
+
+                .button-primary {
+                    color: #fff;
+                    background: #0073aa;
+                    border-color: #0073aa;
+                    text-shadow: 0 -1px 0 #0073aa;
+                }
+
+                .button-primary:hover {
+                    background: #006799;
+                    border-color: #006799;
+                }
+
+                .clear {
+                    clear: both;
+                }
+            </style>
+
+            <!-- Widget 1 -->
+            <div id="workspace_widget_template_1" class="postbox">
+
+                <div class="postbox-header ui-sortable-handle">
+                    <h2 class="hndle">Workspace Widget</h2>
+                    <div class="handle-actions">
+                        <button type="button" class="handle-order-higher"
+                            aria-describedby="workspace_widget_template_1-handle-order-higher-description">
+                            <span class="screen-reader-text">Move up</span>
+                            <span class="order-higher-indicator" aria-hidden="true"></span>
+                        </button>
+                        <span class="hidden" id="workspace_widget_template_1-handle-order-higher-description">Move
+                            Workspace Widget box up</span>
+
+                        <button type="button" class="handle-order-lower"
+                            aria-describedby="workspace_widget_template_1-handle-order-lower-description">
+                            <span class="screen-reader-text">Move down</span>
+                            <span class="order-lower-indicator" aria-hidden="true"></span>
+                        </button>
+                        <span class="hidden" id="workspace_widget_template_1-handle-order-lower-description">Move
+                            Workspace Widget box down</span>
+
+                        <button type="button" class="handlediv" aria-expanded="true">
+                            <span class="screen-reader-text">Toggle panel: Workspace Widget</span>
+                            <span class="toggle-indicator" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="inside">
+                    <div class="workspace-widget">
+                        <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Widget 2 -->
+            <div id="workspace_widget_template_2" class="postbox">
+
+                <div class="postbox-header ui-sortable-handle">
+                    <h2 class="hndle">Workspace Form Widget</h2>
+                    <div class="handle-actions hide-if-no-js">
+                        <button type="button" class="handle-order-higher"
+                            aria-describedby="workspace_widget_template_2-handle-order-higher-description">
+                            <span class="screen-reader-text">Move up</span>
+                            <span class="order-higher-indicator" aria-hidden="true"></span>
+                        </button>
+                        <span class="hidden" id="workspace_widget_template_2-handle-order-higher-description">Move
+                            Workspace Widget box up</span>
+
+                        <button type="button" class="handle-order-lower"
+                            aria-describedby="workspace_widget_template_2-handle-order-lower-description">
+                            <span class="screen-reader-text">Move down</span>
+                            <span class="order-lower-indicator" aria-hidden="true"></span>
+                        </button>
+                        <span class="hidden" id="workspace_widget_template_2-handle-order-lower-description">Move
+                            Workspace Widget box down</span>
+
+                        <button type="button" class="handlediv" aria-expanded="true">
+                            <span class="screen-reader-text">Toggle panel: Workspace Widget</span>
+                            <span class="toggle-indicator" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="inside">
+                    <form name="post" action="#" method="post" id="widget-form-2" class="initial-form">
+                        <div class="input-text-wrap" id="title-wrap-2">
+                            <label for="title-2">Title</label>
+                            <input type="text" name="the_title" id="title-2" autocomplete="off">
+                        </div>
+                        <div class="textarea-wrap" id="description-wrap-2">
+                            <label for="content-2">Content</label>
+                            <textarea name="content" id="content-2" placeholder="Description" class="mceEditor" rows="3"
+                                cols="15" autocomplete="off"></textarea>
+                        </div>
+                        <p class="submit">
+                            <input type="hidden" name="action" id="widgetform-action-2" value="widgetform-save">
+                            <input type="hidden" name="the_ID" value="5">
+                            <input type="hidden" name="the_type" value="post">
+                            <input type="hidden" id="_wpnonce-2" name="_wpnonce" value="123456789">
+                            <input type="hidden" name="_wp_http_referer" value="#">
+                            <input type="submit" name="save" id="save-post-2" class="button button-primary"
+                                value="Save Form">
+                            <br class="clear">
+                        </p>
+                    </form>
+                </div>
+            </div>
+
+        </section>
+        <div class="inside">
+            <div class="ad-status-wrapper">
+                <div id="ad-system-diagnostics-root" class="ad-status-grid ui-sortable">
+                    <div class="ad-stat-item pinned" data-key="load"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-dashboard ad-stat-icon"></span>WP Load Time</span><span
+                            class="ad-stat-value"><span style="color:var(--ad-green); font-weight:700;">0.278s</span> /
+                            0.304s</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-yes ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item pinned" data-key="queries"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-search ad-stat-icon"></span>DB Queries</span><span
+                            class="ad-stat-value"><span style="color:var(--ad-green); font-weight:700;">28</span></span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-yes ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item pinned" data-key="memory"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-info ad-stat-icon"></span>Memory Usage</span><span
+                            class="ad-stat-value"><span style="color:var(--ad-green); font-weight:700;">8 MB</span> /
+                            256M</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-yes ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item pinned" data-key="time_srv"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-clock ad-stat-icon"></span>Server Time</span><span
+                            class="ad-stat-value">08:01:55 (UTC)</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-yes ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item pinned" data-key="uptime"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-backup ad-stat-icon"></span>Server Uptime</span><span
+                            class="ad-stat-value">11d 8h 6m</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-yes ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item pinned" data-key="time_wp"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-wordpress ad-stat-icon"></span>WP Time Zone</span><span
+                            class="ad-stat-value">08:01:55 (WP Offset)</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-yes ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="time_db"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-database ad-stat-icon"></span>MySQL Time</span><span
+                            class="ad-stat-value">08:01:55</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="wp_install"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-calendar-alt ad-stat-icon"></span>Install Date</span><span
+                            class="ad-stat-value">Unknown</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="dbsize"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-category ad-stat-icon"></span>DB Size</span><span
+                            class="ad-stat-value">1.73 MB (12 tables)</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="autoload"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-archive ad-stat-icon"></span>Autoload Options</span><span
+                            class="ad-stat-value"><span style="color:var(--ad-green); font-weight:700;">0.00
+                                B</span></span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="objcache"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-cloud ad-stat-icon"></span>Object Cache</span><span
+                            class="ad-stat-value">File/None</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="cache_path"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-admin-settings ad-stat-icon"></span>Cache Path
+                            Hint</span><span class="ad-stat-value">None/Unknown</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="plugins"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-admin-plugins ad-stat-icon"></span>Plugins
+                            (Act/Total)</span><span class="ad-stat-value">2 / 6</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="themes"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-admin-appearance ad-stat-icon"></span>Themes
+                            (Inac/Total)</span><span class="ad-stat-value">6 / 7</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="debug"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-buddicons-replies ad-stat-icon"></span>WP Debug</span><span
+                            class="ad-stat-value"><span
+                                style="color:var(--ad-yellow); font-weight:600;">Enabled</span></span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="display_errors"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-warning ad-stat-icon"></span>PHP Errors</span><span
+                            class="ad-stat-value"><span
+                                style="color:var(--ad-yellow); font-weight:600;">ON</span></span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="updates"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-update ad-stat-icon"></span>Auto Updates</span><span
+                            class="ad-stat-value">Enabled (Const)</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="upload"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-upload ad-stat-icon"></span>Max Upload</span><span
+                            class="ad-stat-value">128 MB</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="uploads_size"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-category ad-stat-icon"></span>Uploads Dir Size</span><span
+                            class="ad-stat-value">52K</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="exec"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-clock ad-stat-icon"></span>Max Exec</span><span
+                            class="ad-stat-value">300s</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="scripts"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-media-code ad-stat-icon"></span>Scripts (On/Reg)</span><span
+                            class="ad-stat-value">70 / 277</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="styles"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-admin-appearance ad-stat-icon"></span>Styles
+                            (On/Reg)</span><span class="ad-stat-value">30 / 75</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="cpu"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-desktop ad-stat-icon"></span>Processor</span><span
+                            class="ad-stat-value">Unknown (0 cores)</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="temp"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-editor-video ad-stat-icon"></span>Temp</span><span
+                            class="ad-stat-value">N/A</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="disk_space"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-media-default ad-stat-icon"></span>Disk Space</span><span
+                            class="ad-stat-value">231 GB / 926 GB (25%)</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="server"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-cloud ad-stat-icon"></span>Software</span><span
+                            class="ad-stat-value">nginx/1.25.4</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="php"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-editor-code ad-stat-icon"></span>PHP</span><span
+                            class="ad-stat-value">8.3.3-1+ubuntu20.04.1+deb.sury.org+1</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="mysql"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-networking ad-stat-icon"></span>MySQL</span><span
+                            class="ad-stat-value">10.5.17</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="ip_hostname"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-info-outline ad-stat-icon"></span>Server Hostname</span><span
+                            class="ad-stat-value">70833944c578</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="ip_srv"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-admin-site ad-stat-icon"></span>Server Host IP</span><span
+                            class="ad-stat-value">172.172.0.100</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="ips"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-networking ad-stat-icon"></span>Server IPs Count</span><span
+                            class="ad-stat-value">1 Assigned</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="ip_user"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-admin-users ad-stat-icon"></span>Your IP</span><span
+                            class="ad-stat-value">172.172.0.1</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="geo"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-location ad-stat-icon"></span>Location</span><span
+                            class="ad-stat-value">Local/Unknown</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                    <div class="ad-stat-item " data-key="wp_version"><span class="ad-stat-label"><span
+                                class="dashicons dashicons-wordpress ad-stat-icon"></span>WP Version</span><span
+                            class="ad-stat-value">6.9</span>
+                        <div class="ad-stat-actions"><span class="dashicons dashicons-admin-post ad-pin-toggle"
+                                title="Toggle Pin"></span></div>
+                    </div>
+                </div>
+                <!-- Removed Refresh Button: Logic is per-page load only -->
+            </div>
+        </div>
+
+        <section <div style="position: relative; height: 300px; display: block; text-align: center;">End</div>
+
+            For example:
+            <div id="pin-item-id" class="notice sd-pin-item pinned" data-key="load">
+
+                <span class="sd-stat-label">
+                    <span class="dashicons dashicons-dashboard sd-stat-icon"></span>
+                    Pin Item Title
+                </span>
+
+                <p class="sd-stat-value">
+                    <span style="color:var(--wp--preset--color--vivid-green-cyan);font-weight:700">0.060s</span> /
+                    0.081s
+                </p>
+
+                <div class="sd-stat-actions">
+                    <button type="button" class="notice-dismiss">
+                        <span class="screen-reader-text">Dismiss this notice.</span>
+                    </button>
+                </div>
+
+            </div>
+
+            <div class="sd-pin-item pinned" data-key="load">
+
+                <span class="sd-stat-value"><span
+                        style="color:var(--wp--preset--color--vivid-green-cyan);font-weight:700">0.060s</span> /
+                    0.081s</span>
+                <div class="sd-stat-actions">
+
+                    <span class="dashicons dashicons-yes sd-pin-toggle" title="Toggle Pin"
+                        data-pin-json="{&quot;type&quot;:&quot;metric&quot;,&quot;label&quot;:&quot;WP Load Time&quot;,&quot;value&quot;:&quot;&lt;span style='color:var(--wp--preset--color--vivid-green-cyan); font-weight:700;'&gt;0.060s&lt;\/span&gt; \/ 0.081s&quot;,&quot;icon&quot;:&quot;dashicons-dashboard&quot;,&quot;id&quot;:&quot;metric_load&quot;}"></span>
+                </div>
+            </div>
+
+            <section>
+
+                <div id="screen-meta" class="metabox-prefs" style="display: block;">
+
+                    <div id="contextual-help-wrap" class="hidden" tabindex="-1" aria-label="Contextual Help Tab"
+                        style="display: none;">
+                        <div id="contextual-help-back"></div>
+                        <div id="contextual-help-columns">
+                            <div class="contextual-help-tabs">
+                                <ul>
+
+                                    <li id="tab-link-overview" class="active">
+                                        <a href="#tab-panel-overview" aria-controls="tab-panel-overview">
+                                            Overview </a>
+                                    </li>
+
+                                    <li id="tab-link-screen-content">
+                                        <a href="#tab-panel-screen-content" aria-controls="tab-panel-screen-content">
+                                            Screen Content </a>
+                                    </li>
+
+                                    <li id="tab-link-action-links">
+                                        <a href="#tab-panel-action-links" aria-controls="tab-panel-action-links">
+                                            Available Actions </a>
+                                    </li>
+
+                                    <li id="tab-link-bulk-actions">
+                                        <a href="#tab-panel-bulk-actions" aria-controls="tab-panel-bulk-actions">
+                                            Bulk actions </a>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="contextual-help-sidebar">
+                                <p><strong>For more information:</strong></p>
+                                <p><a href="https://wordpress.org/documentation/article/posts-screen/">Documentation on
+                                        Managing Posts</a></p>
+                                <p><a href="https://wordpress.org/support/forums/">Support forums</a></p>
+                            </div>
+
+                            <div class="contextual-help-tabs-wrap">
+
+                                <div id="tab-panel-overview" class="help-tab-content active">
+                                    <p>This screen provides access to all of your posts. You can customize the display
+                                        of this screen to suit your workflow.</p>
+                                </div>
+
+                                <div id="tab-panel-screen-content" class="help-tab-content">
+                                    <p>You can customize the display of this screen’s contents in a number of ways:</p>
+                                    <ul>
+                                        <li>You can hide/display columns based on your needs and decide how many posts
+                                            to list per screen using the Screen Options tab.</li>
+                                        <li>You can filter the list of posts by post status using the text links above
+                                            the posts list to only show posts with that status. The default view is to
+                                            show all posts.</li>
+                                        <li>You can view posts in a simple title list or with an excerpt using the
+                                            Screen Options tab.</li>
+                                        <li>You can refine the list to show only posts in a specific category or from a
+                                            specific month by using the dropdown menus above the posts list. Click the
+                                            Filter button after making your selection. You also can refine the list by
+                                            clicking on the post author, category or tag in the posts list.</li>
+                                    </ul>
+                                </div>
+
+                                <div id="tab-panel-action-links" class="help-tab-content">
+                                    <p>Hovering over a row in the posts list will display action links that allow you to
+                                        manage your post. You can perform the following actions:</p>
+                                    <ul>
+                                        <li><strong>Edit</strong> takes you to the editing screen for that post. You can
+                                            also reach that screen by clicking on the post title.</li>
+                                        <li><strong>Quick Edit</strong> provides inline access to the metadata of your
+                                            post, allowing you to update post details without leaving this screen.</li>
+                                        <li><strong>Trash</strong> removes your post from this list and places it in the
+                                            Trash, from which you can permanently delete it.</li>
+                                        <li><strong>Preview</strong> will show you what your draft post will look like
+                                            if you publish it. View will take you to your live site to view the post.
+                                            Which link is available depends on your post’s status.</li>
+                                    </ul>
+                                </div>
+
+                                <div id="tab-panel-bulk-actions" class="help-tab-content">
+                                    <p>You can also edit or move multiple posts to the Trash at once. Select the posts
+                                        you want to act on using the checkboxes, then select the action you want to take
+                                        from the Bulk actions menu and click Apply.</p>
+                                    <p>When using Bulk Edit, you can change the metadata (categories, author, etc.) for
+                                        all selected posts at once. To remove a post from the grouping, just click the
+                                        <span class="dashicons dashicons-dismiss" aria-hidden="true"
+                                            style="font-size: 16px; width: 16px; vertical-align: middle;"></span><span
+                                            class="screen-reader-text">remove</span> button next to its name in the Bulk
+                                        Edit area that appears.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="screen-options-wrap" class="" tabindex="-1" aria-label="Screen Options Tab"
+                        style="display: block;">
+                        <form id="adv-settings" method="post">
+                            <fieldset class="metabox-prefs">
+                                <legend>Columns</legend>
+                                <label><input class="hide-column-tog" name="author-hide" type="checkbox"
+                                        id="author-hide" value="author" checked="checked">Author</label>
+                                <label><input class="hide-column-tog" name="categories-hide" type="checkbox"
+                                        id="categories-hide" value="categories" checked="checked">Categories</label>
+                                <label><input class="hide-column-tog" name="tags-hide" type="checkbox" id="tags-hide"
+                                        value="tags" checked="checked">Tags</label>
+                                <label><input class="hide-column-tog" name="comments-hide" type="checkbox"
+                                        id="comments-hide" value="comments" checked="checked">Comments</label>
+                                <label><input class="hide-column-tog" name="date-hide" type="checkbox" id="date-hide"
+                                        value="date" checked="checked">Date</label>
+                            </fieldset>
+                            <fieldset class="screen-options">
+                                <legend>Pagination</legend>
+                                <label for="edit_post_per_page">Number of items per page:</label>
+                                <input type="number" step="1" min="1" max="999" class="screen-per-page"
+                                    name="wp_screen_options[value]" id="edit_post_per_page" value="20">
+                                <input type="hidden" name="wp_screen_options[option]" value="edit_post_per_page">
+                            </fieldset>
+                            <fieldset class="metabox-prefs view-mode">
+                                <legend>View mode</legend>
+                                <label for="list-view-mode">
+                                    <input id="list-view-mode" type="radio" name="mode" value="list">
+                                    Compact view </label>
+                                <label for="excerpt-view-mode">
+                                    <input id="excerpt-view-mode" type="radio" name="mode" value="excerpt"
+                                        checked="checked">
+                                    Extended view </label>
+                            </fieldset>
+                            <p class="submit"><input type="submit" name="screen-options-apply" id="screen-options-apply"
+                                    class="button button-primary" value="Apply"></p>
+                            <input type="hidden" id="screenoptionnonce" name="screenoptionnonce" value="b381e7f7e7">
+                        </form>
+                    </div>
+                </div>
+
+                <div id="screen-meta-links">
+
+                    <div id="screen-options-link-wrap" class="hide-if-no-js screen-meta-toggle" style="">
+                        <button type="button" id="show-settings-link" class="button show-settings screen-meta-active"
+                            aria-controls="screen-options-wrap" aria-expanded="true">Screen Options</button>
+                    </div>
+
+                </div>
+
+                <script>
+                    window.screenMeta = {
+                        element: null, // #screen-meta
+                        toggles: null, // .screen-meta-toggle
+                        page: null, // #wpcontent
+
+                        /**
+                         * Initializes the screen meta options panel.
+                         *
+                         * @since 3.2.0
+                         *
+                         * @return {void}
+                         */
+                        init: function () {
+                            this.element = $( '#screen-meta' );
+                            this.toggles = $( '#screen-meta-links' ).find( '.show-settings' );
+                            this.page = $( '#wpcontent' );
+
+                            this.toggles.on( 'click', this.toggleEvent );
+                        },
+
+                        /**
+                         * Toggles the screen meta options panel.
+                         *
+                         * @since 3.2.0
+                         *
+                         * @return {void}
+                         */
+                        toggleEvent: function () {
+                            var panel = $( '#' + $( this ).attr( 'aria-controls' ) );
+
+                            if ( !panel.length )
+                                return;
+
+                            if ( panel.is( ':visible' ) )
+                                screenMeta.close( panel, $( this ) );
+                            else
+                                screenMeta.open( panel, $( this ) );
+                        },
+
+                        /**
+                         * Opens the screen meta options panel.
+                         *
+                         * @since 3.2.0
+                         *
+                         * @param {jQuery} panel  The screen meta options panel div.
+                         * @param {jQuery} button The toggle button.
+                         *
+                         * @return {void}
+                         */
+                        open: function ( panel, button ) {
+
+                            $( '#screen-meta-links' ).find( '.screen-meta-toggle' ).not( button.parent() ).css( 'visibility', 'hidden' );
+
+                            panel.parent().show();
+
+                            /**
+                             * Sets the focus to the meta options panel and adds the necessary CSS classes.
+                             *
+                             * @since 3.2.0
+                             *
+                             * @return {void}
+                             */
+                            panel.slideDown( 'fast', function () {
+                                panel.removeClass( 'hidden' ).trigger( 'focus' );
+                                button.addClass( 'screen-meta-active' ).attr( 'aria-expanded', true );
+                            } );
+
+                            $document.trigger( 'screen:options:open' );
+                        },
+
+                        /**
+                         * Closes the screen meta options panel.
+                         *
+                         * @since 3.2.0
+                         *
+                         * @param {jQuery} panel  The screen meta options panel div.
+                         * @param {jQuery} button The toggle button.
+                         *
+                         * @return {void}
+                         */
+                        close: function ( panel, button ) {
+                            /**
+                             * Hides the screen meta options panel.
+                             *
+                             * @since 3.2.0
+                             *
+                             * @return {void}
+                             */
+                            panel.slideUp( 'fast', function () {
+                                button.removeClass( 'screen-meta-active' ).attr( 'aria-expanded', false );
+                                $( '.screen-meta-toggle' ).css( 'visibility', '' );
+                                panel.parent().hide();
+                                panel.addClass( 'hidden' );
+                            } );
+
+                            $document.trigger( 'screen:options:close' );
+                        }
+                    };
+                </script>
+
+            </section>
+
+            <section></section>
+
+    </body>
+
+</html>

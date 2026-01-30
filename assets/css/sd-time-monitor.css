@@ -1,0 +1,112 @@
+/* ==========================================================================
+   TIME MONITOR WIDGET
+   Ported from Admin Drawer (ad-time-monitor.php)
+   ========================================================================== */
+
+#sd-time-module {
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans,
+		Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+	color: #3c434a;
+	padding: 10px;
+}
+
+.sd-time-grid {
+	display: flex;
+	flex-direction: row; /* Force row */
+	justify-content: space-between;
+	align-items: flex-start;
+	margin-bottom: 20px;
+	padding-bottom: 20px;
+	border-bottom: 1px solid #f0f0f1;
+	text-align: left;
+}
+
+.sd-time-col {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+/* Middle Column Centering */
+.sd-time-col:nth-child(2) {
+	align-items: center;
+	text-align: center;
+}
+
+/* Last Column Right Align */
+.sd-time-col:last-child {
+	align-items: flex-end;
+	text-align: right;
+}
+
+.sd-time-col .sd-label {
+	font-size: 11px;
+	text-transform: uppercase;
+	color: #646970;
+	font-weight: 700;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 4px;
+}
+
+.sd-time-col .sd-val {
+	font-size: 26px; /* Larger font match */
+	font-weight: 600; /* Bolder */
+	color: #1d2327;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace; /* Monospace-ish for numbers */
+	font-variant-numeric: tabular-nums;
+	letter-spacing: -0.5px;
+	line-height: 1.1;
+	display: block;
+}
+
+.sd-time-col .sd-sub {
+	font-size: 11px;
+	color: #8c8f94;
+}
+
+.sd-drift-container {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	background: #f6f7f7;
+	border-radius: 4px;
+	padding: 8px 12px;
+}
+
+.sd-drift-info {
+	display: flex;
+	align-items: center;
+	gap: 15px;
+	width: 100%;
+	justify-content: space-between;
+	font-size: 12px;
+	color: #50575e;
+}
+
+/* Dark Mode Support */
+[data-theme="dark"] #sd-time-module {
+	color: #f6f7f7;
+}
+
+[data-theme="dark"] .sd-time-grid {
+	border-bottom-color: #3c434a;
+}
+
+[data-theme="dark"] .sd-time-col .sd-label,
+[data-theme="dark"] .sd-time-col .sd-sub {
+	color: #a7aaad;
+}
+
+[data-theme="dark"] .sd-time-col .sd-val {
+	color: #fff;
+}
+
+[data-theme="dark"] .sd-drift-container {
+	background: #2c3338;
+	color: #c3c4c7;
+}
