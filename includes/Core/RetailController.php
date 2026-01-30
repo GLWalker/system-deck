@@ -43,6 +43,17 @@ class RetailController {
         // Prevent Drawer from loading inside itself
         remove_action('wp_footer', [self::class, 'render_shell'], 20);
 
+        // Enqueue the Inspector Engine (The Magic Mouse)
+        add_action('wp_enqueue_scripts', function() {
+            wp_enqueue_script(
+                'sd-inspector-engine',
+                SD_URL . 'assets/js/sd-inspector-engine.js',
+                ['jquery'],
+                SD_VERSION,
+                true
+            );
+        });
+
         // Add class for CSS targeting
         add_filter('body_class', function($classes) {
             $classes[] = 'sd-is-preview';
