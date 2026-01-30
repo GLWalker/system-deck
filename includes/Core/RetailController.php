@@ -30,10 +30,11 @@ class RetailController {
     }
 
     /**
-     * strip_preview_mode
+     * clean_preview_mode
      * Ensures the iframe is clean (No Admin Bar, No Drawer).
      */
     public static function clean_preview_mode(): void {
+        // Safe check: inside 'init' hook, pluggable functions are available
         if (!current_user_can('manage_options')) return;
 
         // Hide Admin Bar
@@ -87,6 +88,5 @@ class RetailController {
 
         // Styles
         wp_enqueue_style('sd-common');
-        // Note: sd-common.css now handles .sd-responsive-controls
     }
 }

@@ -42,6 +42,7 @@ final class Boot
 
         // 3. Initialize Core Components
         StorageEngine::init();
+        Harvester::init();
         Registry::instance();
         UserPreferences::init();
         AjaxHandler::init();

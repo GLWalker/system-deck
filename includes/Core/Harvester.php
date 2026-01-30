@@ -16,7 +16,6 @@ class Harvester
     }
 
     public static function needs_harvest(Context $context): bool {
-        // Simple check: do we have data? Real logic would check timestamps.
         $data = StorageEngine::get('telemetry', $context);
         return empty($data);
     }
@@ -38,18 +37,16 @@ class Harvester
         if (method_exists('WP_Theme_JSON_Resolver', 'get_style_variations')) {
             $raw_variations = \WP_Theme_JSON_Resolver::get_style_variations();
             foreach ($raw_variations as $v) {
-                // Ensure $v is an array and has the expected keys
-                $title = $v['title'] ?? 'Untitled';
-                $slug = $v['slug'] ?? sanitize_title($title);
                 $variations[] = [
-                    'title' => $title,
-                    'slug' => $slug
+                    'title' => $v['title'] ?? 'Untitled',
+                    'slug' => $v['slug'] ?? sanitize_title($v['title'] ?? '')
                 ];
             }
         }
 
         return [
-            'palette'    => $settings['color']['palette']['theme'] ?? [],
+            'theme'      => get_stylesheet(),
+            'palette'    => $settings['color']['palette']['theme'] ?? $settings['color']['palette']['default'] ?? [],
             'spacing'    => $settings['spacing']['spacingScale'] ?? [],
             'typography' => $settings['typography']['fontSizes']['theme'] ?? [],
             'layout'     => $settings['layout'] ?? [],
@@ -59,6 +56,6 @@ class Harvester
     }
 
     public static function invalidate_cache(): void {
-        // TODO: Clear db rows
+        // Handled by StorageEngine / Context logic naturally on next load
     }
 }
