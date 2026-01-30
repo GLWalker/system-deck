@@ -16,6 +16,7 @@ vendor/
 
 # User Data
 /brain/
+/documentation/
 implementation_plan.md
 walkthrough.md
 task.md
