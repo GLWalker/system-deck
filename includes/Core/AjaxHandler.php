@@ -56,7 +56,8 @@ class AjaxHandler
             'get_telemetry',      // Live Data Stream
             'save_widget_data',   // Generic Data Store (Write)
             'get_widget_data',    // Generic Data Store (Read)
-            'clear_cache'         // System Utility
+            'clear_cache',        // System Utility
+            'get_harvest'         // Phase 3: Get Harvested Theme Data
         ];
 
         foreach ($actions as $action) {
@@ -660,5 +661,23 @@ class AjaxHandler
     public static function handle_ping_latency(): void {
         self::verify_request();
         wp_send_json_success(['ts' => microtime(true)]);
+    }
+
+    /**
+     * AJAX: Get Harvested Theme Data (for Correlator)
+     */
+    public static function handle_get_harvest(): void
+    {
+        self::verify_request();
+
+        $context = new Context(get_current_user_id(), 'retail', 'global', 'global');
+        $data = StorageEngine::get('telemetry', $context); // This is where Harvester saves
+
+        // If empty, force harvest
+        if (empty($data)) {
+            $data = Harvester::harvest($context);
+        }
+
+        wp_send_json_success($data);
     }
 }

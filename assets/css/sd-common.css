@@ -339,3 +339,39 @@ body.sd-retail-mode-active {
 	border: 1px solid rgba(255, 255, 255, 0.2);
 	margin-right: 8px;
 }
+
+/* Correlator Token Pill */
+.sd-token-pill {
+	display: inline-block;
+	background: #42b883; /* Vue/Success Green for "Match" */
+	color: #fff;
+	font-size: 10px;
+	font-weight: 700;
+	padding: 1px 5px;
+	border-radius: 4px;
+	text-transform: uppercase;
+	margin-right: 4px;
+	letter-spacing: 0.5px;
+}
+
+/* Style Swapper Dropdown */
+.sd-style-control {
+	margin: 0 8px;
+	position: relative;
+}
+
+#sd-style-swapper {
+	background: #000;
+	color: #fff;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 4px;
+	padding: 4px 8px;
+	font-size: 12px;
+	height: 30px;
+	outline: none;
+	cursor: pointer;
+}
+
+#sd-style-swapper:hover {
+	border-color: rgba(255, 255, 255, 0.4);
+}

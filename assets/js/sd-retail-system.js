@@ -1,6 +1,6 @@
 /**
  * SystemDeck RetailSystem Engine
- * Handles: Responsive Wrapper, Iframe Management, and Floating Menu.
+ * Phase 3: Data Correlator & Style Swapper
  */
 ;(function ($) {
 	"use strict"
@@ -8,14 +8,11 @@
 	const RetailSystem = {
 		active: false,
 		iframe: null,
+		harvest: null, // Stores theme.json data
 
 		init: function () {
-			// 1. Check for Launch
-			if ($("#sd-retail-dock").length) {
-				$("#sd-retail-dock").fadeIn()
-			}
+			if ($("#sd-retail-dock").length) $("#sd-retail-dock").fadeIn()
 
-			// 2. Bind Triggers
 			$(document).on("click", "#sd-retail-trigger", this.open.bind(this))
 			$(document).on("click", ".sd-close-retail", this.close.bind(this))
 			$(document).on(
@@ -24,7 +21,13 @@
 				this.hideInspector.bind(this),
 			)
 
-			// 3. Auto-Launch from State
+			// Phase 3: Variation Switcher
+			$(document).on(
+				"change",
+				"#sd-style-swapper",
+				this.switchStyle.bind(this),
+			)
+
 			if (
 				window.sd_retail_vars &&
 				sd_retail_vars.state &&
@@ -33,23 +36,149 @@
 				this.open()
 			}
 
-			// 4. Listen for messages from the "Magic Mouse"
+			// Listen for messages from the "Magic Mouse"
 			window.addEventListener("message", this.handleMessage.bind(this))
 		},
 
-		handleMessage: function (e) {
-			// Security check: Ensure message is from our iframe
-			if (!e.data || e.data.type !== "sd_element_selected") return
+		// --- DATA CORRELATOR LOGIC ---
 
+		loadHarvest: function () {
+			if (this.harvest) return // Already loaded
+
+			$.post(
+				sd_retail_vars.ajax_url,
+				{
+					action: "sd_get_harvest",
+					nonce: sd_retail_vars.nonce,
+				},
+				(res) => {
+					if (res.success) {
+						this.harvest = res.data
+						this.renderStyleSwapper() // Populate dropdown
+					}
+				},
+			)
+		},
+
+		correlateColor: function (colorVal) {
+			if (!this.harvest || !this.harvest.palette || !colorVal) return null
+
+			// Normalize (simple check, robust would use a Color library)
+			// Checks for direct Hex or RGB match
+			const match = this.harvest.palette.find((c) => c.color === colorVal)
+			if (match) return match
+
+			// Simple RGB string matcher could go here
+			return null
+		},
+
+		// --- STYLE SWAPPER LOGIC ---
+
+		renderStyleSwapper: function () {
+			if (!this.harvest || !this.harvest.variations) return
+
+			const vars = this.harvest.variations
+			if (vars.length === 0) return
+
+			// Inject Dropdown into Toolbar if not exists
+			if ($("#sd-style-swapper").length === 0) {
+				let options = `<option value="">Default Style</option>`
+
+				// Get current active style from URL (if we just reloaded)
+				const current = new URLSearchParams(window.location.search).get(
+					"sd_style",
+				)
+
+				vars.forEach((v) => {
+					const sel = current === v.slug ? "selected" : ""
+					options += `<option value="${v.slug}" ${sel}>${v.title}</option>`
+				})
+
+				const selectorHtml = `
+                    <div class="sd-style-control">
+                        <select id="sd-style-swapper">${options}</select>
+                    </div>
+                `
+
+				// Append before the close button
+				$(
+					".sd-retail-toolbar .sd-responsive-controls:last-child",
+				).before(selectorHtml)
+			}
+		},
+
+		switchStyle: function (e) {
+			const slug = $(e.target).val()
+			const iframe = $("#sd-retail-frame")
+			let url = new URL(iframe.attr("src"))
+
+			if (slug) {
+				url.searchParams.set("sd_style", slug)
+			} else {
+				url.searchParams.delete("sd_style")
+			}
+
+			iframe.attr("src", url.toString())
+		},
+
+		// --- INSPECTOR UI (UPDATED) ---
+
+		handleMessage: function (e) {
+			if (!e.data || e.data.type !== "sd_element_selected") return
 			this.renderInspectorPanel(e.data.data)
 		},
 
 		renderInspectorPanel: function (data) {
 			let panel = $("#sd-inspector-panel")
 
-			// Create if missing
+			// Build Panel Skeleton if missing
 			if (!panel.length) {
-				const panelHtml = `
+				this.buildPanelSkeleton()
+				panel = $("#sd-inspector-panel")
+			}
+
+			// Populate Basic Data
+			$("#sd-insp-title").text(
+				data.tagName.toUpperCase() + (data.id ? "#" + data.id : ""),
+			)
+			$("#sd-insp-block").text(data.block)
+			$("#sd-insp-w").text(Math.round(data.box.width) + "px")
+			$("#sd-insp-h").text(Math.round(data.box.height) + "px")
+			$("#sd-insp-font").text(
+				data.styles.fontFamily.split(",")[0].replace(/['"]/g, ""),
+			)
+
+			// --- CORRELATION MAGIC ---
+			this.updateColorField(
+				"#sd-insp-color",
+				"#sd-insp-color-swatch",
+				data.styles.color,
+			)
+			this.updateColorField(
+				"#sd-insp-bg",
+				"#sd-insp-bg-swatch",
+				data.styles.backgroundColor,
+			)
+
+			panel.addClass("active")
+		},
+
+		updateColorField: function (textId, swatchId, colorVal) {
+			$(swatchId).css("background-color", colorVal)
+
+			const match = this.correlateColor(colorVal)
+			if (match) {
+				// Found a token!
+				$(textId).html(
+					`<span class="sd-token-pill">${match.name}</span> <small>${colorVal}</small>`,
+				)
+			} else {
+				$(textId).text(colorVal)
+			}
+		},
+
+		buildPanelSkeleton: function () {
+			const panelHtml = `
                     <div id="sd-inspector-panel">
                         <div class="sd-insp-header">
                             <span class="dashicons dashicons-search"></span>
@@ -68,7 +197,6 @@
                             <div class="sd-insp-section">
                                 <label>Typography</label>
                                 <div id="sd-insp-font" class="sd-value-truncate"></div>
-                                <div id="sd-insp-size" class="sd-meta-value"></div>
                             </div>
                             <div class="sd-insp-section">
                                 <label>Colors</label>
@@ -84,38 +212,7 @@
                         </div>
                     </div>
                 `
-				$("#sd-retail-wrapper").append(panelHtml)
-				panel = $("#sd-inspector-panel")
-			}
-
-			// Populate Data
-			$("#sd-insp-title").text(
-				data.tagName.toUpperCase() + (data.id ? "#" + data.id : ""),
-			)
-			$("#sd-insp-block").text(data.block)
-			$("#sd-insp-w").text(Math.round(data.box.width) + "px")
-			$("#sd-insp-h").text(Math.round(data.box.height) + "px")
-
-			$("#sd-insp-font").text(
-				data.styles.fontFamily.split(",")[0].replace(/['"]/g, ""),
-			)
-			$("#sd-insp-size").text(
-				data.styles.fontSize + " (" + data.styles.fontWeight + ")",
-			)
-
-			$("#sd-insp-color").text(data.styles.color)
-			$("#sd-insp-color-swatch").css(
-				"background-color",
-				data.styles.color,
-			)
-
-			$("#sd-insp-bg").text(data.styles.backgroundColor)
-			$("#sd-insp-bg-swatch").css(
-				"background-color",
-				data.styles.backgroundColor,
-			)
-
-			panel.addClass("active")
+			$("#sd-retail-wrapper").append(panelHtml)
 		},
 
 		hideInspector: function () {
@@ -128,15 +225,12 @@
 			$("body").addClass("sd-retail-mode-active")
 			$("#sd-retail-dock").fadeOut()
 
-			// Prevent double render
 			if ($("#sd-retail-wrapper").length) return
 
-			// 1. Determine URL (Add sd_preview param)
 			let url = window.location.href
 			url = url.split("#")[0] // Remove anchor
 			url += (url.indexOf("?") > -1 ? "&" : "?") + "sd_preview=1"
 
-			// 2. Build Stage
 			const stageHtml = `
                 <div id="sd-retail-wrapper">
                     <div class="sd-retail-toolbar">
@@ -161,13 +255,13 @@
                     </div>
                 </div>
             `
-
 			$("body").append(stageHtml)
 
-			// 3. Bind Canvas Controls
 			this.bindControls()
 
-			// 4. Save State
+			// Phase 3: Load Data
+			this.loadHarvest()
+
 			this.persistState({ open: true })
 		},
 
@@ -186,10 +280,10 @@
 				function () {
 					$("#sd-retail-wrapper .sd-btn-icon").removeClass("active")
 					$(this).addClass("active")
-
 					var w = $(this).data("w")
-					var canvas = $("#sd-retail-canvas")
-					canvas.css({ width: w === "100%" ? "100%" : w + "px" })
+					$("#sd-retail-canvas").css({
+						width: w === "100%" ? "100%" : w + "px",
+					})
 				},
 			)
 		},
@@ -206,7 +300,6 @@
 		},
 	}
 
-	// Only run if NOT inside the preview iframe
 	if (window.self === window.top) {
 		$(document).ready(function () {
 			RetailSystem.init()

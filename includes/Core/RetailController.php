@@ -16,6 +16,11 @@ class RetailController {
         // 1. Detect Preview Mode (The Iframe)
         if (isset($_GET['sd_preview'])) {
             add_action('init', [self::class, 'clean_preview_mode']);
+
+            // Phase 3: Intercept Theme JSON to swap styles
+            if (!empty($_GET['sd_style'])) {
+                add_filter('wp_theme_json_data_theme', [self::class, 'inject_variation']);
+            }
         }
 
         // 2. Normal Retail Mode
@@ -27,6 +32,25 @@ class RetailController {
         if (class_exists('SystemDeck\Modules\RetailSystem')) {
             \SystemDeck\Modules\RetailSystem::init();
         }
+    }
+
+    /**
+     * Inject a specific style variation into the current page load.
+     * This happens entirely in memory - no database writes needed.
+     */
+    public static function inject_variation($theme_json) {
+        $slug = sanitize_text_field($_GET['sd_style']);
+
+        if (class_exists('WP_Theme_JSON_Resolver')) {
+            $variations = \WP_Theme_JSON_Resolver::get_style_variations();
+            foreach ($variations as $v) {
+                if (($v['slug'] ?? sanitize_title($v['title'])) === $slug) {
+                    $theme_json->update_with($v);
+                    break;
+                }
+            }
+        }
+        return $theme_json;
     }
 
     /**
