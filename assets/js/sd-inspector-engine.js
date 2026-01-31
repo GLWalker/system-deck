@@ -8,6 +8,7 @@
 	const Inspector = {
 		active: false,
 		hovered: null,
+		selectedAncestry: [],
 
 		init: function () {
 			if (window.self === window.top) return
@@ -15,6 +16,7 @@
 			this.active = true
 			this.injectStyles()
 			this.bindEvents()
+			window.addEventListener("message", this.handleMessage.bind(this))
 		},
 
 		injectStyles: function () {
@@ -73,6 +75,14 @@
 			)
 		},
 
+		handleMessage: function (e) {
+			if (!e.data || e.data.type !== "sd_request_reselection") return
+			const index = e.data.index
+			if (this.selectedAncestry[index]) {
+				this.select(this.selectedAncestry[index], true)
+			}
+		},
+
 		highlight: function (el) {
 			this.hovered = el
 			el.classList.add("sd-ghost-hover")
@@ -96,24 +106,123 @@
 			if (label) label.remove()
 		},
 
-		select: function (el) {
+		select: function (el, isReselection = false) {
 			const computed = window.getComputedStyle(el)
 			const blockName = el.getAttribute("data-sd-block") || "html"
 
-			// PHASE 4: Capture Deep Box Model
+			// Capture Ancestry
+			if (!isReselection) {
+				this.selectedAncestry = []
+				let curr = el
+				while (curr) {
+					this.selectedAncestry.unshift(curr)
+					if (curr.tagName === "HTML") break
+					curr = curr.parentElement
+				}
+			}
+
+			const breadcrumbs = this.selectedAncestry
+				.map((node) => {
+					let name = node.getAttribute("data-sd-block")
+					const isBlock = node.className.includes
+						? node.className.includes("wp-block")
+						: false
+					const isSiteRoot = node.classList.contains("wp-site-blocks")
+					const isBody = node.tagName === "BODY"
+					const isHTML = node.tagName === "HTML"
+
+					// Literal Name Fallback
+					if (!name) {
+						if (isSiteRoot) name = "Canvas"
+						else if (isBody) name = "body"
+						else if (isHTML) name = "html"
+						else name = node.tagName.toLowerCase()
+					}
+
+					// NOISE FILTER: Only keep blocks, structural containers, or root elements
+					// If we have a 'Canvas' (wp-site-blocks), we can skip the higher-level html/body clutter
+					const hasCanvas = this.selectedAncestry.some((n) =>
+						n.classList.contains("wp-site-blocks"),
+					)
+					if (hasCanvas && (isHTML || isBody)) return null
+
+					if (
+						!name &&
+						!isBlock &&
+						!isSiteRoot &&
+						!isBody &&
+						!isHTML
+					) {
+						return null
+					}
+
+					return {
+						name: name,
+						tagName: node.tagName.toLowerCase(),
+						isBlock: isBlock,
+					}
+				})
+				.filter((c) => c !== null)
+
+			// 2) COMPONENT-AWARE SUBJECT PROBING
+			// Blocks like Button, Image, and Heading often have the "real" styles on a child.
+			let subject = el
+			let subjectComputed = computed
+			let subjectClasses =
+				el.className instanceof SVGAnimatedString
+					? el.className.baseVal
+					: el.className
+
+			if (blockName === "core/button") {
+				const link = el.querySelector(".wp-block-button__link")
+				if (link) subject = link
+			} else if (blockName === "core/image") {
+				const img = el.querySelector("img")
+				if (img) subject = img
+			} else if (blockName.startsWith("core/heading")) {
+				const h = el.querySelector("h1, h2, h3, h4, h5, h6")
+				if (h) subject = h
+			}
+
+			if (subject !== el) {
+				subjectComputed = window.getComputedStyle(subject)
+				subjectClasses +=
+					" " +
+					(subject.className instanceof SVGAnimatedString
+						? subject.className.baseVal
+						: subject.className)
+			}
+
+			// CLEANUP: Remove Inspector's own UI noise from the payload
+			subjectClasses = subjectClasses
+				.replace(/sd-ghost-hover/g, "")
+				.replace(/sd-inspectable/g, "")
+				.replace(/\s+/g, " ")
+				.trim()
+
 			const payload = {
 				type: "sd_element_selected",
 				data: {
 					tagName: el.tagName.toLowerCase(),
-					id: el.id,
-					className: el.className
-						.replace("sd-ghost-hover", "")
+					subjectTag: subject.tagName.toLowerCase(),
+					id: el.id ? el.id.replace("sd-ghost-label", "").trim() : "",
+					className: subjectClasses,
+					inlineStyle: (
+						(el.getAttribute("style") || "") +
+						" " +
+						(subject.getAttribute("style") || "")
+					)
+						.replace(/undefined/g, "")
+						.replace(/sd-ghost-hover/g, "")
 						.trim(),
+
 					block: blockName,
+					breadcrumbs: breadcrumbs,
+					selectedIndex: this.selectedAncestry.indexOf(el),
+
 					box: {
 						width: el.offsetWidth,
 						height: el.offsetHeight,
-						// Content Box Dimensions (Approx)
 						contentW:
 							el.clientWidth -
 							parseFloat(computed.paddingLeft) -
@@ -124,13 +233,29 @@
 							parseFloat(computed.paddingBottom),
 					},
 					styles: {
-						color: computed.color,
-						backgroundColor: computed.backgroundColor,
-						fontFamily: computed.fontFamily,
-						fontSize: computed.fontSize,
-						fontWeight: computed.fontWeight,
-						boxShadow: computed.boxShadow,
-						// Granular Spacing Data
+						// Merge Logic: Use Subject for visual attributes, Container for structural
+						color:
+							subjectComputed.color !== "rgba(0, 0, 0, 0)" &&
+							subjectComputed.color !== "transparent"
+								? subjectComputed.color
+								: computed.color,
+						backgroundColor:
+							subjectComputed.backgroundColor !==
+								"rgba(0, 0, 0, 0)" &&
+							subjectComputed.backgroundColor !== "transparent"
+								? subjectComputed.backgroundColor
+								: computed.backgroundColor,
+						backgroundImage:
+							subjectComputed.backgroundImage !== "none"
+								? subjectComputed.backgroundImage
+								: computed.backgroundImage,
+						fontFamily: subjectComputed.fontFamily,
+						fontSize: subjectComputed.fontSize,
+						fontWeight: subjectComputed.fontWeight,
+						boxShadow:
+							subjectComputed.boxShadow !== "none"
+								? subjectComputed.boxShadow
+								: computed.boxShadow,
 						spacing: {
 							mt: computed.marginTop,
 							mr: computed.marginRight,

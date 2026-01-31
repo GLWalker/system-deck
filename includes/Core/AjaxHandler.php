@@ -670,11 +670,12 @@ class AjaxHandler
 
         // STALE CHECK: If palette is missing RGB data, force update
         $is_stale = false;
-        if (isset($data['palette']) && !empty($data['palette']) && isset($data['palette'][0]) && !isset($data['palette'][0]['rgb'])) {
+        $palette = $data['settings']['color']['palette']['theme'] ?? null;
+        if ($palette && isset($palette[0]) && !isset($palette[0]['rgb'])) {
             $is_stale = true;
         }
 
-        if (empty($data) || $is_stale) {
+        if (empty($data) || empty($data['settings']) || $is_stale) {
             $data = Harvester::harvest($context);
         }
 
