@@ -32,6 +32,9 @@ class RetailController {
         if (class_exists('SystemDeck\Modules\RetailSystem')) {
             \SystemDeck\Modules\RetailSystem::init();
         }
+
+        // 4. Export Engine
+        add_action('wp_ajax_sd_export_theme_json', [self::class, 'handle_export_theme_json']);
     }
 
     /**
@@ -116,6 +119,7 @@ class RetailController {
         wp_localize_script('sd-retail-system', 'sd_retail_vars', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('sd_load_shell'),
+            'export_nonce' => wp_create_nonce('sd_retail_nonce'),
             'site_url' => home_url('/'),
             // Pre-load preferences from StorageEngine
             'state'    => StorageEngine::get('pref_retail_state', new Context($user_id, 'retail', 'global', 'global'))
@@ -123,5 +127,64 @@ class RetailController {
 
         // Styles
         wp_enqueue_style('sd-common');
+    }
+
+    /**
+     * EXPORT ENGINE: Generates a valid theme.json from cached Telemetry.
+     */
+    public static function handle_export_theme_json() {
+        // 1. Security & Permissions
+        if (!current_user_can('edit_theme_options') || !check_ajax_referer('sd_retail_nonce', 'nonce', false)) {
+            wp_die('Permission denied', 403);
+        }
+
+        // 2. Retrieve the "Universal Harvester" Data
+        $user_id = get_current_user_id();
+        $telemetry = \SystemDeck\Core\StorageEngine::get('telemetry', new Context($user_id, 'retail', 'global', 'global'));
+
+        if (!$telemetry || empty($telemetry['settings'])) {
+            wp_die('No telemetry found. Please load the Inspector first.', 404);
+        }
+
+        // 3. Construct Payload (Schema v3)
+        $export = [
+            '$schema'  => 'https://schemas.wp.org/trunk/theme.json',
+            'version'  => 3,
+            'title'    => ($telemetry['theme'] ?? 'Theme') . ' (SystemDeck Variation)',
+            'settings' => self::clean_for_export($telemetry['settings']),
+            'styles'   => self::clean_for_export($telemetry['styles']),
+            'customTemplates' => $telemetry['customTemplates'] ?? [],
+            'templateParts'   => $telemetry['templateParts'] ?? []
+        ];
+
+        // 4. Force Download
+        $filename = 'theme-variation-' . date('Y-m-d-His') . '.json';
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+
+        echo json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Sanitizer: Removes SystemDeck internal keys (like 'rgb') to ensure valid schema.
+     */
+    private static function clean_for_export($array) {
+        if (!is_array($array)) return $array;
+
+        foreach ($array as $key => &$value) {
+            // Strip our internal logic keys
+            if ($key === 'rgb' || $key === 'refId') {
+                unset($array[$key]);
+            } elseif (is_array($value)) {
+                $value = self::clean_for_export($value);
+            }
+        }
+        return $array;
     }
 }

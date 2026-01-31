@@ -30,6 +30,11 @@
 				"#sd-style-swapper",
 				this.switchStyle.bind(this),
 			)
+			$(document).on(
+				"click",
+				"#sd-tool-inspect",
+				this.toggleInspector.bind(this),
+			)
 
 			if (
 				window.sd_retail_vars &&
@@ -39,6 +44,49 @@
 				this.open()
 			}
 			window.addEventListener("message", this.handleMessage.bind(this))
+		},
+
+		inspectorActive: false,
+
+		toggleInspector: function () {
+			this.inspectorActive = !this.inspectorActive
+			const btn = $("#sd-tool-inspect")
+
+			if (this.inspectorActive) {
+				btn.addClass("active")
+				$("#sd-retail-wrapper").addClass("sd-inspect-mode")
+				this.sendMessage({
+					command: "sd_inspector_toggle",
+					active: true,
+				})
+
+				// UX Polish: Show Empty State immediately if panel is empty
+				if (!$("#sd-inspector-panel").hasClass("active")) {
+					this.renderEmptyState()
+				}
+			} else {
+				btn.removeClass("active")
+				$("#sd-retail-wrapper").removeClass("sd-inspect-mode")
+				$("#sd-inspector-panel").removeClass("active")
+				this.sendMessage({
+					command: "sd_inspector_toggle",
+					active: false,
+				})
+			}
+		},
+
+		renderEmptyState: function () {
+			this.buildPanelSkeleton()
+			const content = $("#sd-inspector-panel .sd-insp-content")
+
+			content.html(`
+                <div class="sd-empty-state">
+                    <span class="dashicons dashicons-admin-appearance"></span>
+                    <p>Select an element</p>
+                    <small>Click any block in the preview to inspect styles.</small>
+                </div>
+            `)
+			$("#sd-inspector-panel").addClass("active")
 		},
 
 		// --- DATA INTELLIGENCE ---
@@ -520,6 +568,13 @@
 			this.renderInspectorPanel(e.data.data)
 		},
 
+		sendMessage: function (msg) {
+			const iframe = document.getElementById("sd-retail-frame")
+			if (iframe && iframe.contentWindow) {
+				iframe.contentWindow.postMessage(msg, "*")
+			}
+		},
+
 		reselectElement: function (e) {
 			const index = $(e.currentTarget).data("index")
 			const iframe = document.getElementById("sd-retail-frame")
@@ -564,6 +619,19 @@
 				this.renderGlobalBaseline()
 			} else {
 				$(".sd-insp-baseline-section").hide()
+			}
+
+			// --- EXPORT LOGIC ---
+			// If viewing Site Root, show Export Button
+			if (
+				data.block === "Site" ||
+				data.block === "Canvas" ||
+				data.tagName === "body" ||
+				(data.className && data.className.includes("wp-site-blocks"))
+			) {
+				this.renderExportButton()
+			} else {
+				$("#sd-insp-export-container").remove()
 			}
 
 			// Classes
@@ -750,6 +818,32 @@
                 </div>
             `
 			$("#sd-insp-baseline-content").html(html)
+		},
+
+		renderExportButton: function () {
+			if ($("#sd-insp-export-container").length) return
+
+			const btn = $(`
+                <div id="sd-insp-export-container" class="sd-insp-section sd-export-section">
+                    <button class="sd-btn-primary sd-full-width" id="sd-action-export">
+                        <span class="dashicons dashicons-download" style="margin-right:5px"></span> Export Variation
+                    </button>
+                    <div class="sd-meta-sub" style="text-align:center; margin-top:8px; opacity:0.7;">
+                        Download current configuration as theme.json
+                    </div>
+                </div>
+            `)
+
+			// Prepend to content so it's at the top
+			$("#sd-inspector-panel .sd-insp-content").prepend(btn)
+
+			$("#sd-action-export").on("click", () => {
+				const url =
+					sd_retail_vars.ajax_url +
+					"?action=sd_export_theme_json&nonce=" +
+					sd_retail_vars.export_nonce
+				window.location.href = url
+			})
 		},
 
 		renderField: function (elId, label, data, renderedValue) {
@@ -1091,6 +1185,9 @@
                     <div class="sd-retail-toolbar">
                         <div class="sd-responsive-controls detatched" style="border:none;">
                             <span class="dashicons dashicons-welcome-view-site"></span> <strong>RetailSystem</strong>
+                        </div>
+                        <div class="sd-responsive-controls detatched" style="border:none;">
+                            <button class="sd-btn-icon" id="sd-tool-inspect" title="Inspect Element"><span class="dashicons dashicons-search"></span></button>
                         </div>
                         <div class="sd-responsive-controls detatched" style="border:none;">
                             <button data-w="375" class="sd-btn-icon" title="Mobile"><span class="dashicons dashicons-smartphone"></span></button>
