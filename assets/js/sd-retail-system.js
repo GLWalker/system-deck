@@ -557,6 +557,15 @@
 				$("#sd-insp-block-id").hide()
 			}
 
+			// GLOBAL BASELINE TOGGLE
+			const isCanvas = data.block === "Canvas"
+			if (isCanvas) {
+				$(".sd-insp-baseline-section").show()
+				this.renderGlobalBaseline()
+			} else {
+				$(".sd-insp-baseline-section").hide()
+			}
+
 			// Classes
 			if (classes) {
 				const cls = classes
@@ -708,6 +717,41 @@
 		 * - If it matches a Theme Token: Shows Pill + Slug.
 		 * - If it is Raw CSS: Shows Value + "Manual" tag.
 		 */
+		renderGlobalBaseline: function () {
+			const palette = this.getSetting("color.palette.theme") || []
+			const fonts = this.getSetting("typography.fontSizes.theme") || []
+			const families =
+				this.getSetting("typography.fontFamilies.theme") || []
+
+			let paletteHtml = ""
+			palette.slice(0, 10).forEach((c) => {
+				paletteHtml += `<div class="sd-baseline-swatch" style="background:${
+					c.color
+				}" title="${c.slug}: ${c.color}"></div>`
+			})
+
+			const html = `
+                <div class="sd-baseline-grid">
+                    <div class="sd-baseline-stat">
+                        <span class="sd-stat-num">${palette.length}</span>
+                        <span class="sd-stat-label">Colors</span>
+                    </div>
+                    <div class="sd-baseline-stat">
+                        <span class="sd-stat-num">${fonts.length}</span>
+                        <span class="sd-stat-label">Sizes</span>
+                    </div>
+                    <div class="sd-baseline-stat">
+                        <span class="sd-stat-num">${families.length}</span>
+                        <span class="sd-stat-label">Fonts</span>
+                    </div>
+                </div>
+                <div class="sd-baseline-palette">
+                    ${paletteHtml}
+                </div>
+            `
+			$("#sd-insp-baseline-content").html(html)
+		},
+
 		renderField: function (elId, label, data, renderedValue) {
 			const el = $(elId)
 			let html = ""
@@ -936,6 +980,11 @@
                         </div>
                     </div>
 
+
+                    <div class="sd-insp-section sd-insp-baseline-section" style="display:none;">
+                         <label>Global Baseline</label>
+                         <div id="sd-insp-baseline-content"></div>
+                    </div>
 
                     <div class="sd-insp-section">
                         <label>Colors</label>

@@ -108,7 +108,9 @@
 
 		select: function (el, isReselection = false) {
 			const computed = window.getComputedStyle(el)
-			const blockName = el.getAttribute("data-sd-block") || "html"
+			const blockName =
+				el.getAttribute("data-sd-block") ||
+				(el.classList.contains("wp-site-blocks") ? "Canvas" : "html")
 
 			// Capture Ancestry
 			if (!isReselection) {

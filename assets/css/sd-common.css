@@ -390,6 +390,44 @@ body.sd-retail-mode-active {
 	font-size: 0.9em;
 }
 
+/* BASELINE HUD */
+.sd-baseline-grid {
+	display: flex;
+	gap: 12px;
+	margin-bottom: 12px;
+}
+.sd-baseline-stat {
+	flex: 1;
+	background: rgba(255, 255, 255, 0.05);
+	padding: 10px;
+	border-radius: 4px;
+	text-align: center;
+	border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.sd-stat-num {
+	display: block;
+	font-size: 1.4em;
+	font-weight: bold;
+	color: var(--sd-highlight);
+}
+.sd-stat-label {
+	font-size: 0.75em;
+	text-transform: uppercase;
+	opacity: 0.6;
+	letter-spacing: 0.05em;
+}
+.sd-baseline-palette {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+.sd-baseline-swatch {
+	width: 14px;
+	height: 14px;
+	border-radius: 2px;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
 .sd-color-row {
 	display: flex;
 	align-items: center;
