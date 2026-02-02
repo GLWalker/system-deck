@@ -49,6 +49,7 @@ final class Boot
         HtmlAttributes::get_instance();
         Assets::init();
         RetailController::init();
+        EditorController::init();
 
         // Modules
         \SystemDeck\Modules\Renderer::init();

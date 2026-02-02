@@ -22,6 +22,9 @@
 			// 1. Bind Global Events First (Always needed for the toggle)
 			this.bindEvents()
 
+			// Listen for FSE Sidebar requests
+			document.addEventListener("sd_open_deck", () => this.loadShell())
+
 			// 2. Initial Setup if element exists
 			const el = document.getElementById("systemdeck")
 			if (el) {

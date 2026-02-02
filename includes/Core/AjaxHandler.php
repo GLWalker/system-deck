@@ -58,7 +58,8 @@ class AjaxHandler
             'get_widget_data',    // Generic Data Store (Read)
             'clear_cache',        // System Utility
             // --- NEW PHASE 3 ENDPOINT ---
-            'get_harvest'
+            'get_harvest',
+            'export_theme_json'
         ];
 
         foreach ($actions as $action) {
@@ -680,5 +681,70 @@ class AjaxHandler
         }
 
         wp_send_json_success($data);
+    }
+
+    /**
+     * AJAX: Export Theme JSON
+     */
+    public static function handle_export_theme_json(): void
+    {
+        // 1. Security & Permissions
+        if (!current_user_can('edit_theme_options')) {
+            wp_die('Permission denied', 403);
+        }
+
+        // Validate nonce - note: we check 'nonce' param as passed from JS
+        if (!check_ajax_referer('sd_retail_nonce', 'nonce', false)) {
+             wp_die('Security check failed', 403);
+        }
+
+        // 2. Retrieve the "Universal Harvester" Data
+        $user_id = get_current_user_id();
+        $telemetry = StorageEngine::get('telemetry', new Context($user_id, 'retail', 'global', 'global'));
+
+        if (!$telemetry || empty($telemetry['settings'])) {
+            wp_die('No telemetry found. Please load the Inspector first.', 404);
+        }
+
+        // 3. Construct Payload (Schema v3)
+        $export = [
+            '$schema'  => 'https://schemas.wp.org/trunk/theme.json',
+            'version'  => 3,
+            'title'    => ($telemetry['theme'] ?? 'Theme') . ' (SystemDeck Variation)',
+            'settings' => self::clean_for_export($telemetry['settings']),
+            'styles'   => self::clean_for_export($telemetry['styles']),
+            'customTemplates' => $telemetry['customTemplates'] ?? [],
+            'templateParts'   => $telemetry['templateParts'] ?? []
+        ];
+
+        // 4. Force Download
+        $filename = 'theme-variation-' . date('Y-m-d-His') . '.json';
+
+        header('Content-Description: File Transfer');
+        header('Content-Type: application/json; charset=utf-8');
+        header('Content-Disposition: attachment; filename=' . $filename);
+        header('Expires: 0');
+        header('Cache-Control: must-revalidate');
+        header('Pragma: public');
+
+        echo json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    /**
+     * Sanitizer for export
+     */
+    private static function clean_for_export($array)
+    {
+        if (!is_array($array)) return $array;
+
+        foreach ($array as $key => &$value) {
+            if ($key === 'rgb' || $key === 'refId') {
+                unset($array[$key]);
+            } elseif (is_array($value)) {
+                $value = self::clean_for_export($value);
+            }
+        }
+        return $array;
     }
 }

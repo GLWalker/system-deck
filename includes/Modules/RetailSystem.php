@@ -29,8 +29,8 @@ class RetailSystem
         if (isset($_GET['sd_preview'])) return; // Don't show in iframe
 
         ?>
-        <div id="sd-retail-dock" class="sd-dock-controls detatched" style="position:fixed; bottom:20px; left:20px; z-index:999999; display:none;">
-            <button type="button" class="sd-btn-icon" id="sd-retail-trigger" title="Open Retail System">
+        <div id="sd-retail-dock" class="sd-dock-controls detatched" style="position:fixed; bottom:20px; left:20px; z-index:999999;">
+            <button type="button" class="sd-btn-icon" id="sd-retail-open" title="Open Retail System">
                 <span class="dashicons dashicons-smartphone"></span>
             </button>
         </div>

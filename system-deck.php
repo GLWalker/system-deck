@@ -2,7 +2,7 @@
 /**
  * Plugin Name: SystemDeck
  * Description: A SMART workspace drawer (Clean Framework).
- * Version: 1.1.7
+ * Version: 1.4.0
  * Author: GL Walker
  * Text Domain: system-deck
  * Requires PHP: 8.0
@@ -17,7 +17,7 @@ if (!defined('ABSPATH')) {
 }
 
 // Define Constants
-define('SD_VERSION', '1.1.7');
+define('SD_VERSION', '1.4.0');
 define('SD_PATH', plugin_dir_path(__FILE__));
 define('SD_URL', plugin_dir_url(__FILE__));
 

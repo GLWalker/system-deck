@@ -1,68 +1,66 @@
 /**
- * SystemDeck General Styles (Pixel Standard)
- * UI components and Layout.
+ * SystemDeck General Styles (V3.0.0)
+ * Purged legacy Retail remnants.
  */
 
 /* =========================================
-   UI CONTROLS
+   UI CONTROLS & UTILITIES
    ========================================= */
-.sd-btn-icon .dashicons {
-	font-size: 18px;
-	width: 18px;
-	height: 18px;
-}
-
 .sd-btn-icon {
 	width: 32px;
 	height: 32px;
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	text-align: center;
 	color: inherit;
 	opacity: 0.8;
-	transition: opacity 0.2s;
+	transition: all 0.2s ease;
 	cursor: pointer;
 	border-radius: 4px;
 	border: 1px solid transparent;
+	background: transparent;
 }
-
 .sd-btn-icon:hover {
 	opacity: 1;
-	color: inherit;
+	background: rgba(255, 255, 255, 0.1);
+}
+.sd-btn-icon .dashicons {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
 }
 
-#systemdeck .sd-dock-controls {
-	display: inline-flex;
+/* Header Bar & Layout */
+#sd-header-bar {
+	height: 40px;
+	background: #1e1e1e;
+	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 15px;
+	color: #fff;
+	z-index: 10000;
+}
+
+.sd-header-right {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.sd-dock-controls {
+	display: flex;
 	align-items: center;
 	gap: 4px;
-	padding: 0 8px;
-	border-left: 1px solid rgba(255, 255, 255, 0.1);
-	border-right: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-/* floating header-bar items */
-#systemdeck .sd-responsive-controls.detatched {
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-}
-
-#systemdeck .sd-responsive-controls.detatched,
-#systemdeck .sd-dock-controls.detatched {
-	background-color: var(--sd-menu-background);
-	color: var(--sd-menu-text);
-	outline: 1px solid transparent;
-	font-size: 16px;
-	border: 1px solid rgba(255, 255, 255, 0.1);
+	background: rgba(0, 0, 0, 0.2);
+	padding: 2px 6px;
 	border-radius: 4px;
-	padding: 8px;
 }
 
 /* =========================================
    DARK MODE
    ========================================= */
-
 #systemdeck[data-theme="dark"] {
 	--sd-body-background: #1a1a1a;
 	--sd-card-bg: #2d2d2d;
@@ -72,672 +70,365 @@
 }
 
 /* =========================================
-   WP NATIVE COMPONENT POLYFILLS (Frontend Safe)
+   VISUAL MODE (The Premium Interface)
    ========================================= */
 
-/* Scoped WP Buttons */
-#systemdeck .button {
-	display: inline-flex;
-	align-items: center;
-	text-decoration: none;
-	font-size: 13px;
-	line-height: normal;
-	height: 30px;
-	margin: 0;
-	padding: 0 10px;
-	cursor: pointer;
-	border-width: 1px;
-	border-style: solid;
-	-webkit-appearance: none;
-	border-radius: 3px;
-	white-space: nowrap;
-	box-sizing: border-box;
-	color: var(--sd-highlight-color, #2271b1);
-	border-color: var(--sd-highlight-color, #2271b1);
-	background: #f6f7f7;
-	vertical-align: top;
-	font-weight: 400;
+body.sd-visual-mode-active {
+	overflow: hidden !important;
 }
 
-#systemdeck .button.button-primary {
-	background: var(--sd-highlight-color, #2271b1);
-	border-color: var(--sd-highlight-color, #2271b1);
-	color: #fff;
-	text-shadow: none;
-}
-
-#systemdeck .button.button-secondary {
-	color: var(--sd-highlight-color, #2271b1);
-	border-color: var(--sd-highlight-color, #2271b1);
-	background: #f6f7f7;
-}
-
-#systemdeck .button:hover,
-#systemdeck .button.button-secondary:hover {
-	background: #f0f0f1;
-	border-color: #0a4b78;
-	color: #0a4b78;
-}
-
-#systemdeck .button.button-primary:hover {
-	background: var(
-		--sd-link-focus,
-		#135e96
-	); /* Using link-focus as hover approx */
-	border-color: var(--sd-link-focus, #135e96);
-	color: #fff;
-}
-
-#systemdeck .button:disabled,
-#systemdeck .button-primary:disabled {
-	color: #a7aaad !important;
-	border-color: #dcdcde !important;
-	background: #f6f7f7 !important;
-	box-shadow: none !important;
-	text-shadow: none !important;
-	cursor: default;
-	transform: none !important;
-}
-
-/* Scoped WP Inputs */
-#systemdeck input[type="text"],
-#systemdeck input[type="password"],
-#systemdeck input[type="search"],
-#systemdeck input[type="email"],
-#systemdeck input[type="number"],
-#systemdeck select,
-#systemdeck textarea {
-	box-shadow: 0 0 0 transparent;
-	border-radius: 4px;
-	border: 1px solid #8c8f94;
-	background-color: #fff;
-	color: #2c3338;
-	font-family:
-		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans,
-		Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-	padding: 0 8px;
-	font-size: 14px;
-	line-height: 2;
-	min-height: 30px;
-}
-
-#systemdeck input:focus,
-#systemdeck select:focus,
-#systemdeck textarea:focus {
-	border-color: var(--sd-highlight-color, #2271b1);
-	box-shadow: 0 0 0 1px var(--sd-highlight-color, #2271b1);
-	outline: 2px solid transparent;
-}
-
-/* =========================================
-   RETAIL SYSTEM (Overlay)
-   ========================================= */
-body.sd-retail-mode-active {
-	overflow: hidden;
-}
-
-#sd-retail-wrapper {
+#sd-visual-workspace {
 	position: fixed;
 	top: 0;
 	left: 0;
 	width: 100vw;
 	height: 100vh;
-	background: var(--sd-body-background, #1a1a1a);
-	z-index: 999999;
+	background: #2c3338;
+	z-index: 99990;
 	display: flex;
 	flex-direction: column;
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
-.sd-retail-toolbar {
-	height: 50px;
-	background: #101517;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+/* Ensure Dashboard (AdminDeck) sits ABOVE Visual Workspace */
+body.sd-visual-mode-active #systemdeck {
+	z-index: var(--sd-z-drawer) !important;
+}
+
+/* The Premium Floating Island */
+.sd-visual-island {
+	position: fixed;
+	bottom: 60px; /* Floats above the systemdesk dock */
+	left: 50%;
+	transform: translateX(-50%);
+	background: rgba(30, 30, 30, 0.95);
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 255, 255, 0.1);
+	border-radius: 50px; /* Pill shape */
+	padding: 4px 12px;
+	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+	z-index: 10000001;
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
-	padding: 0 20px;
-	color: #fff;
-	flex-shrink: 0;
 }
 
-#sd-retail-stage {
+/* Admin Bar Parity Menu */
+#sd-visual-menu {
+	display: flex;
+	align-items: center;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	gap: 4px;
+}
+
+#sd-visual-menu .ab-item {
+	color: #eee !important;
+	padding: 6px !important;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 50%;
+	transition: background 0.2s;
+	cursor: pointer;
+	text-decoration: none !important;
+}
+
+#sd-visual-menu .ab-item:hover,
+#sd-visual-menu .ab-item.active {
+	background: var(--sd-highlight-color, #2271b1) !important;
+	color: #fff !important;
+}
+
+#sd-visual-menu .ab-item .dashicons,
+#sd-visual-menu .ab-item .ab-icon {
+	font-size: 18px;
+	width: 18px;
+	height: 18px;
+	line-height: 1;
+	display: block;
+}
+
+#sd-visual-menu .sd-separator {
+	width: 1px;
+	height: 20px;
+	background: rgba(255, 255, 255, 0.15);
+	margin: 0 10px;
+}
+
+/* Style Swapper */
+#sd-visual-style-select {
+	display: flex;
+	align-items: center;
+}
+#sd-style-swapper {
+	background: transparent;
+	color: #fff;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+	border-radius: 4px;
+	font-size: 11px;
+	padding: 2px 6px;
+	outline: none;
+	cursor: pointer;
+}
+
+/* The Main Canvas Stage */
+#sd-visual-canvas-wrap {
 	flex-grow: 1;
-	background: #2c3338;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	overflow: auto;
-	padding: 40px;
-	background-image: radial-gradient(#3c434a 1px, transparent 1px);
-	background-size: 20px 20px;
+	padding: 10px;
+	padding-bottom: 100px; /* Space for toolbar and bottom handle */
+	background: #333; /* Darker stage background */
+	overflow: auto; /* Allow scrolling if canvas > viewport */
+	scrollbar-width: thin;
 }
 
-#sd-retail-canvas {
-	width: 100%;
+#sd-visual-resizable {
+	position: relative;
+	width: 783px; /* Default LG breakpoint */
 	height: 100%;
 	background: #fff;
-	box-shadow: 0 0 50px rgba(0, 0, 0, 0.5);
-	transition: width 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	box-shadow: 0 0 50px rgba(0, 0, 0, 0.4);
+	border: 1px solid #555;
 	border-radius: 4px;
-	overflow: hidden;
-	position: relative;
-	max-width: 100%;
+	transform-origin: top center; /* Critical for auto-scaling */
+	transition:
+		width 0.3s ease,
+		height 0.3s ease,
+		transform 0.3s ease;
 }
 
-#sd-retail-frame {
+/* Resize Transition Lock */
+#sd-visual-resizable.is-resizing {
+	transition: none !important;
+}
+
+/* Mouse Trap: Prevents iframe from stealing pointer events during drag */
+#sd-visual-resizable.is-resizing::after {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 999;
+}
+
+/* Resizer Handles */
+.sd-resizer {
+	position: absolute;
+	background: #444;
+	z-index: 1000;
+	opacity: 0;
+	transition: opacity 0.2s;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+#sd-visual-resizable:hover .sd-resizer,
+.sd-resizer.is-resizing {
+	opacity: 1;
+}
+
+/* Right Handle */
+.sd-resizer-r {
+	top: 50%;
+	right: -24px;
+	width: 24px;
+	height: 64px;
+	transform: translateY(-50%);
+	cursor: e-resize;
+	border-radius: 0 6px 6px 0;
+	background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 10 20" xmlns="http://www.w3.org/2000/svg"><path d="M4 4v12m2-12v12" stroke="%23eee" stroke-width="2" fill="none"/></svg>');
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+/* Bottom Handle */
+.sd-resizer-b {
+	bottom: -24px;
+	left: 50%;
+	width: 64px;
+	height: 24px;
+	transform: translateX(-50%);
+	cursor: s-resize;
+	border-radius: 0 0 6px 6px;
+	background-image: url('data:image/svg+xml;utf8,<svg viewBox="0 0 20 10" xmlns="http://www.w3.org/2000/svg"><path d="M4 4h12m-12 2h12" stroke="%23eee" stroke-width="2" fill="none"/></svg>');
+	background-repeat: no-repeat;
+	background-position: center;
+}
+
+/* Dimension Tooltip */
+#sd-resize-tooltip {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background: rgba(0, 0, 0, 0.8);
+	color: #fff;
+	padding: 5px 10px;
+	border-radius: 4px;
+	font-family: monospace;
+	font-size: 12px;
+	pointer-events: none;
+	opacity: 0;
+	transition: opacity 0.2s;
+	z-index: 1001;
+}
+#sd-resize-tooltip.visible {
+	opacity: 1;
+}
+
+#sd-visual-frame {
 	width: 100%;
 	height: 100%;
 	border: none;
 	display: block;
 }
 
-/* Inspector Panel HUD */
-#sd-inspector-panel {
+/* =========================================
+   PURGE: Legacy Retail System Shit
+   ========================================= */
+#sd-retail-wrapper,
+#sd-retail-dock,
+.sd-dock-controls.detatched,
+.sd-retail-toolbar,
+#sd-retail-stage {
+	display: none !important;
+	visibility: hidden !important;
+	pointer-events: none !important;
+}
+/* =========================================
+   Inspector HUD (Retail Mode)
+   ========================================= */
+#sd-inspector-hud {
 	position: absolute;
-	top: 60px;
-	right: 20px;
-	width: 280px;
-	background: #1e1e1e;
-	color: #f0f0f1;
-	border-radius: 8px;
-	box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	z-index: 1000000;
-	font-family:
-		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-	transform: translateX(320px);
-	transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-	opacity: 0;
-}
-
-#sd-inspector-panel.active {
-	transform: translateX(0);
-	opacity: 1;
-}
-
-.sd-insp-header {
+	top: 0;
+	right: -320px;
+	width: 320px;
+	height: 100%;
+	background: #fff;
+	border-left: 1px solid #e0e0e0;
+	box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+	z-index: 2000;
 	display: flex;
 	flex-direction: column;
-	align-items: flex-start;
-	padding: 12px 15px;
-	background: rgba(255, 255, 255, 0.05);
-	border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-	gap: 8px;
+	transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	font-family:
+		-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans,
+		Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
 }
 
-.sd-insp-header-main {
+#sd-visual-workspace.hud-active #sd-inspector-hud {
+	right: 0;
+}
+
+#sd-inspector-hud-header {
+	padding: 15px 20px;
+	border-bottom: 1px solid #f0f0f1;
+	background: #fdfdfd;
 	display: flex;
+	justify-content: space-between;
 	align-items: center;
-	width: 100%;
 }
 
-.sd-insp-header strong {
+#sd-inspector-hud-header h3 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+	color: #1e1e1e;
+}
+
+#sd-inspector-hud-content {
 	flex-grow: 1;
-	font-size: 13px;
-}
-.sd-insp-header .sd-btn-icon {
-	width: 24px;
-	height: 24px;
-	min-height: 0;
-}
-
-#sd-insp-breadcrumbs {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 4px;
-	font-size: 10px;
-	padding: 6px 8px;
-	background: rgba(0, 0, 0, 0.3);
-	border-radius: 4px;
-	width: 100%;
-	box-sizing: border-box;
-	line-height: 1.4;
-}
-
-.sd-breadcrumb-item {
-	cursor: pointer;
-	opacity: 0.6;
-	transition:
-		opacity 0.2s,
-		color 0.2s;
-	white-space: nowrap;
-}
-
-.sd-breadcrumb-item:hover {
-	opacity: 1;
-	color: #2271b1;
-	text-decoration: underline;
-}
-
-.sd-breadcrumb-item.active {
-	opacity: 1;
-	color: #42b883;
-	font-weight: 700;
-}
-
-.sd-breadcrumb-sep {
-	opacity: 0.3;
-	font-weight: normal;
-}
-
-.sd-insp-content {
-	padding: 15px;
-	font-size: 12px;
 	overflow-y: auto;
-	max-height: calc(100vh - 150px);
+	padding: 0;
+	scrollbar-width: thin;
 }
 
-.sd-insp-row {
-	display: flex;
-	justify-content: space-between;
-	margin-bottom: 10px;
-	align-items: center;
+/* Sidebar Field Styling (Sync with FSE) */
+.sd-hud-panel-body {
+	padding: 16px;
+	border-bottom: 1px solid #f0f0f1;
 }
-.sd-insp-section label {
-	color: #666;
-	text-transform: uppercase;
-	font-size: 9px;
+
+.sd-hud-panel-title {
+	font-size: 11px;
 	font-weight: 700;
+	text-transform: uppercase;
+	color: #757575;
+	margin-bottom: 12px;
 	display: block;
-	margin-bottom: 8px;
-	letter-spacing: 0.5px;
 }
 
-.sd-tag {
-	background: #2271b1;
-	color: #fff;
-	padding: 2px 6px;
-	border-radius: 3px;
-	font-family: monospace;
-}
-
-/* Semantic Trace Styles */
-.sd-trace-row {
-	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-	gap: 6px;
-	width: 100%;
-}
-
-.sd-dr-line {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	width: 100%;
-	margin-bottom: 4px;
-}
-
-.sd-insp-section {
-	margin-bottom: 20px;
-	padding-top: 15px;
-	border-top: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.sd-value-truncate {
-	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	font-weight: 500;
-}
-.sd-meta-value {
-	color: #888;
-}
-
-.sd-trace-hint {
-	color: #666;
-	font-style: italic;
-	font-size: 0.9em;
-}
-
-/* BASELINE HUD */
-.sd-baseline-grid {
-	display: flex;
-	gap: 12px;
+.sd-sidebar-field {
 	margin-bottom: 12px;
 }
-.sd-baseline-stat {
-	flex: 1;
-	background: rgba(255, 255, 255, 0.05);
-	padding: 10px;
-	border-radius: 4px;
-	text-align: center;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-}
-.sd-stat-num {
-	display: block;
-	font-size: 1.4em;
-	font-weight: bold;
-	color: var(--sd-highlight);
-}
-.sd-stat-label {
-	font-size: 0.75em;
+
+.sd-sidebar-field-label {
+	font-size: 10px;
+	font-weight: 600;
+	color: #757575;
 	text-transform: uppercase;
-	opacity: 0.6;
-	letter-spacing: 0.05em;
 }
-.sd-baseline-palette {
+
+.sd-sidebar-field-value {
+	font-size: 12px;
+	color: #1e1e1e;
+	font-family: monospace;
+}
+
+.sd-hud-empty {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+	opacity: 0.5;
+	padding: 40px;
+	text-align: center;
+}
+
+/* Breadcrumbs */
+.sd-hud-breadcrumbs {
+	background: #fdfdfd;
+	border-bottom: 1px solid #f0f0f1;
+	padding: 8px 16px;
 	display: flex;
 	flex-wrap: wrap;
 	gap: 4px;
-}
-.sd-baseline-swatch {
-	width: 14px;
-	height: 14px;
-	border-radius: 2px;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-.sd-color-row {
-	display: flex;
 	align-items: center;
-	margin-bottom: 6px;
-}
-.sd-swatch {
-	width: 16px;
-	height: 16px;
-	border-radius: 4px;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	margin-right: 8px;
 }
 
-/* The "System Token" Pill (Good) */
-.sd-token-pill {
-	background: rgba(255, 255, 255, 0.1);
-	color: #fff;
-	padding: 1px 5px;
-	border-radius: 3px;
-	font-size: 9px;
-	font-family: monospace;
-	border: 1px solid rgba(255, 255, 255, 0.1);
-	text-transform: none;
-	letter-spacing: normal;
-}
-
-/* The "Manual Override" Tag (Warning) */
-.sd-tag-manual {
-	font-size: 8px;
-	text-transform: uppercase;
-	color: #ffab40; /* Orange Warning */
-	border: 1px solid rgba(255, 171, 64, 0.4);
-	background: rgba(255, 171, 64, 0.1);
-	padding: 1px 3px;
-	border-radius: 2px;
-	letter-spacing: 0.5px;
-}
-
-/* Style Swapper Dropdown */
-.sd-style-control {
-	margin: 0 8px;
-	position: relative;
-}
-
-#sd-style-swapper {
-	background: #000;
-	color: #fff;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	border-radius: 4px;
-	padding: 4px 8px;
-	font-size: 12px;
-	height: 30px;
-	outline: none;
+.sd-hud-breadcrumb-item {
+	font-size: 10px;
+	color: #757575;
 	cursor: pointer;
-}
-
-#sd-style-swapper:hover {
-	border-color: rgba(255, 255, 255, 0.4);
-}
-
-/* Box Model Visualizer */
-.sd-box-model-container {
-	margin: 15px 0;
-	font-size: 9px;
-	color: rgba(255, 255, 255, 0.7);
-	text-align: center;
-	cursor: default;
-}
-
-.sd-box-layer {
-	padding: 16px 25px;
-	border: 1px dashed rgba(255, 255, 255, 0.1);
+	display: flex;
+	align-items: center;
+	padding: 2px 4px;
 	border-radius: 2px;
-	position: relative;
-	transition: background 0.2s;
+	transition:
+		background 0.2s,
+		color 0.2s;
 }
 
-.sd-box-margin {
-	background: rgba(249, 204, 157, 0.05); /* Orange Tint */
-	border-color: rgba(249, 204, 157, 0.3);
-	margin-bottom: 2px;
+.sd-hud-breadcrumb-item:hover {
+	background: #f0f0f1;
+	color: #1e1e1e;
 }
 
-.sd-box-border {
-	background: rgba(255, 220, 156, 0.05); /* Yellow Tint */
-	border-color: rgba(255, 220, 156, 0.3);
-}
-
-.sd-box-padding {
-	background: rgba(195, 224, 183, 0.05); /* Green Tint */
-	border-color: rgba(195, 224, 183, 0.3);
-}
-
-.sd-box-content {
-	background: rgba(160, 197, 232, 0.2); /* Blue Tint */
-	border: 1px solid rgba(160, 197, 232, 0.4);
-	padding: 6px 4px;
-	min-height: 20px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	color: #fff;
+.sd-hud-breadcrumb-item.active {
+	color: #2271b1;
 	font-weight: 600;
 }
 
-.sd-box-label {
-	position: absolute;
-	top: 2px;
-	left: 4px;
-	font-size: 8px;
-	text-transform: uppercase;
-	opacity: 0.5;
-}
-
-.sd-box-side {
-	position: absolute;
-	font-size: 8px;
-	opacity: 0.8;
-}
-
-.sd-box-side-top {
-	top: 2px;
-	left: 50%;
-	transform: translateX(-50%);
-}
-.sd-box-side-right {
-	right: 4px;
-	top: 50%;
-	transform: translateY(-50%);
-}
-.sd-box-side-bottom {
-	bottom: 2px;
-	left: 50%;
-	transform: translateX(-50%);
-}
-.sd-box-side-left {
-	left: 4px;
-	top: 50%;
-	transform: translateY(-50%);
-}
-
-/* Box Model Grid Layout */
-.sd-box-row {
-	display: flex;
-	align-items: stretch;
-	justify-content: center;
-	width: 100%;
-}
-.sd-box-top,
-.sd-box-bottom {
-	text-align: center;
-	height: 12px;
-	line-height: 12px;
-	font-size: 9px;
-}
-.sd-box-left,
-.sd-box-right {
-	width: 12px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	font-size: 9px;
-}
-.sd-box-content {
-	flex-grow: 1;
-	padding: 4px;
-	min-width: 60px;
-}
-.sd-box-layer {
-	display: flex;
-	flex-direction: column;
-	align-items: stretch;
-}
-
-/* Shadow Inspector */
-.sd-shadow-preview {
-	width: 24px;
-	height: 24px;
-	background: #fff; /* Needs to be light to show shadow */
-	border-radius: 4px;
-	margin-right: 10px;
-	border: 1px solid #ddd;
-}
-
-/* Inspector Updates Phase 4.7 */
-.sd-insp-block-header {
-	font-size: 14px;
-	font-weight: 700;
-	margin-bottom: 4px;
-	display: flex;
-	justify-content: space-between;
-	align-items: baseline;
-}
-
-#sd-insp-block-classes {
+.sd-hud-breadcrumb-separator {
 	font-size: 10px;
-	color: #888;
-	display: block;
-	word-break: break-all;
-	margin-top: 4px;
-	background: rgba(0, 0, 0, 0.2);
-	padding: 4px;
-	border-radius: 4px;
-}
-
-.sd-detail-row {
-	display: flex;
-	justify-content: space-between;
-	align-items: center;
-	margin-bottom: 6px;
-	font-size: 11px;
-}
-.sd-label {
-	color: #888;
-	margin-right: 8px;
-}
-.sd-val {
-	text-align: right;
-	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-	flex-grow: 1;
-}
-
-.sd-meta-sub {
-	color: #666;
-	font-size: 9px;
-	margin-left: 6px;
-}
-.sd-spacing-header {
-	font-size: 10px;
-	font-weight: 600;
-	text-transform: uppercase;
-	color: #888;
-	margin: 8px 0 4px;
-	border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.sd-col-info {
-	display: flex;
-	flex-direction: column;
-	margin-left: 8px;
-	flex-grow: 1;
-}
-.sd-color-row {
-	align-items: flex-start;
-	margin-bottom: 10px;
-	display: flex;
-}
-.sd-color-row .sd-swatch {
-	margin-top: 2px;
-}
-
-.sd-spacing-list {
-	margin-top: 10px;
-}
-
-/* Phase 6: Empty State */
-.sd-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    text-align: center;
-    color: #888;
-    height: 100%;
-}
-.sd-empty-state .dashicons {
-    font-size: 48px;
-    height: 48px;
-    width: 48px;
-    margin-bottom: 16px;
-    opacity: 0.3;
-}
-.sd-empty-state p {
-    font-size: 14px;
-    font-weight: 500;
-    margin: 0 0 8px;
-    color: #ccc;
-}
-.sd-empty-state small {
-    font-size: 11px;
-    opacity: 0.6;
-}
-
-/* Export Section */
-.sd-export-section {
-    background: rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 16px;
-    margin-bottom: 16px;
-}
-.sd-btn-primary {
-    background: #2271b1;
-    color: #fff;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: background 0.2s;
-}
-.sd-btn-primary:hover {
-    background: #135e96;
-}
-.sd-full-width {
-    width: 100%;
+	color: #ccc;
+	user-select: none;
 }

@@ -161,7 +161,7 @@ class Assets
         $colors = $schemes[$scheme] ?? $schemes['fresh'];
         $keys = ['link', 'link-focus', 'highlight-color', 'button-color', 'notification-color', 'menu-background', 'menu-text', 'menu-icon', 'menu-highlight-background', 'menu-highlight-text', 'menu-highlight-icon', 'menu-current-background', 'menu-current-text', 'menu-current-icon', 'menu-submenu-background', 'menu-submenu-text', 'menu-submenu-focus-text'];
 
-        $css = "#systemdeck {\n";
+        $css = "#systemdeck, #sd-retail-dock, .sd-dock-controls {\n";
         foreach ($keys as $i => $key) {
             $val = $colors[$i] ?? $colors[0];
             $css .= "    --sd-{$key}: {$val};\n";

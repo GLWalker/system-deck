@@ -6,7 +6,11 @@
 	"use strict"
 
 	const SystemDeckSys = {
+		initialized: false,
+
 		init: function () {
+			if (this.initialized) return
+			this.initialized = true
 			this.bindEvents()
 			this.restoreState()
 		},

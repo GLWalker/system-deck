@@ -11,7 +11,14 @@ if (!defined('ABSPATH')) { exit; }
 
 class RetailController {
     public static function init(): void {
+        // 0. AJAX Bridge (Active for all)
+        add_action('wp_ajax_sd_export_theme_json', [self::class, 'handle_export_theme_json']);
+
         if (is_admin()) return;
+
+        // Ensure preview parameter persists through server-side redirects
+        add_filter('wp_redirect', [self::class, 'intercept_preview_redirect']);
+        add_filter('redirect_post_location', [self::class, 'intercept_preview_redirect']);
 
         // 1. Detect Preview Mode (The Iframe)
         if (isset($_GET['sd_preview'])) {
@@ -32,9 +39,6 @@ class RetailController {
         if (class_exists('SystemDeck\Modules\RetailSystem')) {
             \SystemDeck\Modules\RetailSystem::init();
         }
-
-        // 4. Export Engine
-        add_action('wp_ajax_sd_export_theme_json', [self::class, 'handle_export_theme_json']);
     }
 
     /**
@@ -70,16 +74,31 @@ class RetailController {
         // Prevent Drawer from loading inside itself
         remove_action('wp_footer', [self::class, 'render_shell'], 20);
 
-        // Enqueue the Inspector Engine (The Magic Mouse)
-        add_action('wp_enqueue_scripts', function() {
-            wp_enqueue_script(
-                'sd-inspector-engine',
-                SD_URL . 'assets/js/sd-inspector-engine.js',
-                ['jquery'],
-                SD_VERSION,
-                true
-            );
-        });
+        // Enqueue the Inspector Engine (The Magic Mouse) - Only if specifically requested
+        if (isset($_GET['sd_inspect'])) {
+            add_action('wp_enqueue_scripts', function() {
+                $settings = [];
+                if (class_exists('\WP_Theme_JSON_Resolver')) {
+                    $settings = \WP_Theme_JSON_Resolver::get_theme_data()->get_settings();
+                }
+
+                wp_enqueue_script(
+                    'sd-inspector-engine',
+                    SD_URL . 'assets/js/sd-inspector-engine.js',
+                    [],
+                    SD_VERSION . '.' . time(),
+                    true
+                );
+
+                wp_localize_script('sd-inspector-engine', 'sd_env', [
+                    'blockDefinitions' => self::get_block_definitions(),
+                    'layout' => $settings['layout'] ?? [],
+                    'spacing' => $settings['spacing'] ?? [],
+                    'isEditor' => false,
+                    'debug' => true,
+                ]);
+            });
+        }
 
         // Add class for CSS targeting
         add_filter('body_class', function($classes) {
@@ -113,78 +132,160 @@ class RetailController {
         if (class_exists(Assets::class)) Assets::register_all();
 
         // Enqueue Retail Engine
-        wp_enqueue_script('sd-retail-system', SD_URL . 'assets/js/sd-retail-system.js', ['jquery'], SD_VERSION, true);
+        wp_enqueue_script('sd-retail-system', SD_URL . 'assets/js/sd-retail-system.js', ['jquery'], SD_VERSION . '.' . time(), true);
+
+        // Enqueue Core Dashboard (AdminDeck) for Frontend Use
+        wp_enqueue_script('sd-deck-js');
+        wp_enqueue_script('sd-system-js');
+        wp_enqueue_script('sd-workspace-react');
+
+        // Enqueue Inspector HUD (React)
+        wp_enqueue_script('sd-inspector-hud', SD_URL . 'assets/js/sd-inspector-hud.js', ['wp-element', 'wp-components'], SD_VERSION . '.' . time(), true);
+
+        // Ensure Core Styles are present
+        foreach (Assets::get_core_styles() as $style) {
+            wp_enqueue_style($style['handle']);
+        }
 
         $user_id = get_current_user_id();
+        $variations = [];
+        if (class_exists('\WP_Theme_JSON_Resolver')) {
+            $vars = \WP_Theme_JSON_Resolver::get_style_variations();
+            foreach ($vars as $key => $var) {
+                $slug = $var['slug'] ?? (isset($var['title']) ? sanitize_title($var['title']) : (string)$key);
+                $title = $var['title'] ?? ucfirst($slug);
+                $variations[] = ['title' => $title, 'slug' => $slug];
+            }
+        }
+
+        $telemetry = StorageEngine::get('telemetry', new Context($user_id, 'retail', 'global', 'global'));
+
         wp_localize_script('sd-retail-system', 'sd_retail_vars', [
             'ajax_url' => admin_url('admin-ajax.php'),
             'nonce'    => wp_create_nonce('sd_load_shell'),
             'export_nonce' => wp_create_nonce('sd_retail_nonce'),
             'site_url' => home_url('/'),
             // Pre-load preferences from StorageEngine
-            'state'    => StorageEngine::get('pref_retail_state', new Context($user_id, 'retail', 'global', 'global'))
+            'state'    => StorageEngine::get('pref_retail_state', new Context($user_id, 'retail', 'global', 'global')),
+            'blockDefinitions' => self::get_block_definitions(),
+            'variations' => $variations,
+            'telemetry' => $telemetry,
+            'debug' => true
         ]);
 
         // Styles
+        wp_enqueue_style('wp-components');
         wp_enqueue_style('sd-common');
     }
 
     /**
-     * EXPORT ENGINE: Generates a valid theme.json from cached Telemetry.
+     * handle_export_theme_json
+     * Streams sanitized telemetry as a theme-variation.json download.
      */
-    public static function handle_export_theme_json() {
-        // 1. Security & Permissions
-        if (!current_user_can('edit_theme_options') || !check_ajax_referer('sd_retail_nonce', 'nonce', false)) {
-            wp_die('Permission denied', 403);
+    public static function handle_export_theme_json(): void {
+        if (!current_user_can('edit_theme_options')) {
+            wp_die('Unauthorized');
         }
 
-        // 2. Retrieve the "Universal Harvester" Data
+        // Verify Nonce
+        if (!isset($_GET['nonce']) || !wp_verify_nonce($_GET['nonce'], 'sd_retail_nonce')) {
+            wp_die('Security check failed.');
+        }
+
         $user_id = get_current_user_id();
-        $telemetry = \SystemDeck\Core\StorageEngine::get('telemetry', new Context($user_id, 'retail', 'global', 'global'));
+        $context = new Context($user_id, 'retail', 'global', 'global');
+        $telemetry = StorageEngine::get('telemetry', $context);
 
-        if (!$telemetry || empty($telemetry['settings'])) {
-            wp_die('No telemetry found. Please load the Inspector first.', 404);
+        if (empty($telemetry)) {
+            wp_die('Telemetry data missing or empty.');
         }
 
-        // 3. Construct Payload (Schema v3)
-        $export = [
-            '$schema'  => 'https://schemas.wp.org/trunk/theme.json',
+        // Prepare variation schema (v3)
+        $variation = [
             'version'  => 3,
-            'title'    => ($telemetry['theme'] ?? 'Theme') . ' (SystemDeck Variation)',
-            'settings' => self::clean_for_export($telemetry['settings']),
-            'styles'   => self::clean_for_export($telemetry['styles']),
-            'customTemplates' => $telemetry['customTemplates'] ?? [],
-            'templateParts'   => $telemetry['templateParts'] ?? []
+            'settings' => $telemetry['settings'] ?? [],
+            'styles'   => $telemetry['styles'] ?? [],
         ];
 
-        // 4. Force Download
-        $filename = 'theme-variation-' . date('Y-m-d-His') . '.json';
+        // Strip Internal Metadata (Recursive cleanup)
+        $variation = self::sanitize_variation($variation);
 
-        header('Content-Description: File Transfer');
-        header('Content-Type: application/json; charset=utf-8');
-        header('Content-Disposition: attachment; filename=' . $filename);
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate');
-        header('Pragma: public');
-
-        echo json_encode($export, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        header('Content-Type: application/json');
+        header('Content-Disposition: attachment; filename="theme-variation.json"');
+        echo json_encode($variation, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES);
         exit;
     }
 
     /**
-     * Sanitizer: Removes SystemDeck internal keys (like 'rgb') to ensure valid schema.
+     * get_block_definitions
+     * Harvests lightweight block metadata for the Inspector Engine.
      */
-    private static function clean_for_export($array) {
-        if (!is_array($array)) return $array;
+    public static function get_block_definitions(): array {
+        if (!class_exists('\WP_Block_Type_Registry')) return [];
 
-        foreach ($array as $key => &$value) {
-            // Strip our internal logic keys
-            if ($key === 'rgb' || $key === 'refId') {
-                unset($array[$key]);
-            } elseif (is_array($value)) {
-                $value = self::clean_for_export($value);
+        $registry = \WP_Block_Type_Registry::get_instance()->get_all_registered();
+        $definitions = [];
+
+        foreach ($registry as $name => $block_type) {
+            $definitions[$name] = [
+                'name'      => $name,
+                'title'     => $block_type->title ?? $name,
+                'selectors' => $block_type->selectors ?? null,
+                'supports'  => $block_type->supports ?? null,
+                'experimentalSelector' => $block_type->supports['__experimentalSelector'] ?? $block_type->{'__experimentalSelector'} ?? null
+            ];
+        }
+
+        return $definitions;
+    }
+
+    /**
+     * sanitize_variation
+     * Recursively removes internal SystemDeck keys from export.
+     */
+    private static function sanitize_variation($data) {
+        if (!is_array($data)) return $data;
+
+        $internal_keys = ['refId', 'rgb', 'id', 'source', 'dna'];
+
+        foreach ($data as $key => $value) {
+            if (in_array($key, $internal_keys, true)) {
+                unset($data[$key]);
+                continue;
+            }
+            if (is_array($value)) {
+                $data[$key] = self::sanitize_variation($value);
             }
         }
-        return $array;
+        return $data;
+    }
+
+    /**
+     * intercept_preview_redirect
+     * Ensures that if we are in a preview session, any redirect carries the flag forward.
+     */
+    public static function intercept_preview_redirect($location) {
+        if (!isset($_GET['sd_preview']) && !isset($_SERVER['HTTP_REFERER'])) {
+            return $location;
+        }
+
+        $is_preview = isset($_GET['sd_preview']) || (isset($_SERVER['HTTP_REFERER']) && strpos($_SERVER['HTTP_REFERER'], 'sd_preview=1') !== false);
+
+        if ($is_preview) {
+            $location = add_query_arg('sd_preview', '1', $location);
+
+            // Carry style variation if present in current request or referer
+            $style = $_GET['sd_style'] ?? null;
+            if (!$style && isset($_SERVER['HTTP_REFERER'])) {
+                parse_str(parse_url($_SERVER['HTTP_REFERER'], PHP_URL_QUERY) ?? '', $ref_params);
+                $style = $ref_params['sd_style'] ?? null;
+            }
+
+            if ($style) {
+                $location = add_query_arg('sd_style', sanitize_text_field($style), $location);
+            }
+        }
+
+        return $location;
     }
 }
