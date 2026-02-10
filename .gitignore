@@ -1,0 +1,12 @@
+
+# System
+.DS_Store
+Thumbs.db
+
+# Documentation
+directive.md
+master.md
+
+# Dependencies
+node_modules/
+vendor/
